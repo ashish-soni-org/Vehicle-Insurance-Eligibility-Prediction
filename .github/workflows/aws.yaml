@@ -1,17 +1,14 @@
-name: Deploy Application Docker Image to EC2 instance
+name: Deploy Project1 to EC2
 
 on:
   push:
     branches: [main]
 
 jobs:
-
   Continuous-Integration:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -31,25 +28,16 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
           IMAGE_TAG: latest
         run: |
-          echo "🔥 Clearing Docker cache to force fresh rebuild"
           docker system prune -af
-
-          echo "🔥 Building new Docker image..."
           docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-          echo "🔥 Pushing new Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
 
   Continuous-Deployment:
     needs: Continuous-Integration
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -67,16 +55,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
         run: |
-          echo "🔥 Stopping old container (if exists)..."
-          docker rm -f myportfolio || true
-
-          echo "🔥 Pulling latest Docker image..."
+          docker rm -f project1 || true
           docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-          echo "🔥 Running container..."
-          docker run -d \
-            --name myportfolio \
-            -p 5000:5000 \
-            $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-          echo "🔥 Deployment completed successfully!"
+          docker run -d --name project1 -p 8101:5000 $ECR_REGISTRY/$ECR_REPOSITORY:latest
