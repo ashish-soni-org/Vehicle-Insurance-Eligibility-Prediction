@@ -43,40 +43,40 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
-  Continuous-Deployment:
-    needs: Continuous-Integration
-    runs-on: self-hosted
+  # Continuous-Deployment:
+  #   needs: Continuous-Integration
+  #   runs-on: self-hosted
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Deploy Docker container on EC2
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
-        run: |
-          echo "🔥 Stopping old container (if exists)..."
-          docker rm -f project1 || true
+  #     - name: Deploy Docker container on EC2
+  #       env:
+  #         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
+  #       run: |
+  #         echo "🔥 Stopping old container (if exists)..."
+  #         docker rm -f project1 || true
 
-          echo "🔥 Pulling latest Docker image..."
-          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
+  #         echo "🔥 Pulling latest Docker image..."
+  #         docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          echo "🔥 Running container..."
-          docker run -d \
-            --name project1 \
-            -p 8101:5000 \
-            $ECR_REGISTRY/$ECR_REPOSITORY:latest
+  #         echo "🔥 Running container..."
+  #         docker run -d \
+  #           --name project1 \
+  #           -p 8101:5000 \
+  #           $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          echo "🔥 Deployment completed successfully!"
+  #         echo "🔥 Deployment completed successfully!"
