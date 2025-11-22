@@ -76,7 +76,7 @@ jobs:
           echo "🔥 Running container..."
           docker run -d \
             --name project1 \
-            -p 8181:5000 \
+            -p 8101:5000 \
             $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
           echo "🔥 Deployment completed successfully!"
