@@ -4,9 +4,11 @@ from src.logger import logging
 from src.exception import CustomException
 
 from src.components.data_ingestion import DataIngestion
+from src.components.data_validation import DataValidation
+from src.components.data_transformation import DataTransformation
+from src.components.model_trainer import ModelTrainer
 
 from src.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainerConfig, ModelEvaluationConfig, ModelPusherConfig
-
 from src.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact, DataTransformationArtifact, ModelTrainerArtifact, ModelEvaluationArtifact, ModelPusherArtifact
 
 class TrainPipeline:
@@ -33,12 +35,11 @@ class TrainPipeline:
         file paths, schema details, hyperparameters, thresholds, and output locations.
         """
         self.data_ingestion_config = DataIngestionConfig()
-        self_data_validation_config = DataValidationConfig()
+        self.data_validation_config = DataValidationConfig()
         self.data_transformation_config = DataTransformationConfig()
         self.model_trainer_config = ModelTrainerConfig()
         self.model_evaluation_config = ModelEvaluationConfig()
         self.model_pushing_config = ModelPusherConfig()
-
 
     def start_data_ingestion(self) -> DataIngestionArtifact:
         """
@@ -56,6 +57,7 @@ class TrainPipeline:
             Artifact containing paths to the ingested training and testing datasets.
         """
         try:
+            logging.info("------------------------------------------------------------------------------------------------")
             logging.info("Starting first phase of pipeline: Data Ingestion...")
             data_ingestion = DataIngestion(self.data_ingestion_config)
             data_ingestion_artifact = data_ingestion.initiate_data_ingestion()
@@ -63,9 +65,9 @@ class TrainPipeline:
             
             return data_ingestion_artifact
         except Exception as e:
-            raise CustomException(e, sys)
+            raise CustomException(e, sys) from e
 
-    def start_data_validation(self) -> DataValidationArtifact:
+    def start_data_validation(self, data_ingestion_artifact: DataIngestionArtifact) -> DataValidationArtifact:
         """
         Perform schema validation, dataset integrity checks, and drift detection.
 
@@ -79,9 +81,18 @@ class TrainPipeline:
         DataValidationArtifact
             Artifact containing validation status, schema reports, and drift reports.
         """
-        pass
+        try:
+            logging.info("------------------------------------------------------------------------------------------------")
+            logging.info("Starting second phase of pipeline: Data Validation...")
+            data_validation = DataValidation(data_ingestion_artifact, self.data_validation_config)
+            data_validation_artifact = data_validation.initiate_data_validation()
+            logging.info("second phase of pipeline completed: Data Validation")
 
-    def start_data_transformation(self) -> DataTransformationArtifact:
+            return data_validation_artifact
+        except Exception as e:
+            raise CustomException(e, sys) from e
+
+    def start_data_transformation(self, data_ingestion_artifact : DataIngestionArtifact, data_validation_artifact : DataValidationArtifact) -> DataTransformationArtifact:
         """
         Transform the validated dataset into numerical format suitable for model training.
 
@@ -104,9 +115,18 @@ class TrainPipeline:
         DataTransformationArtifact
             Artifact containing transformed arrays and the preprocessing object.
         """
-        pass
+        try:
+            logging.info("------------------------------------------------------------------------------------------------")
+            logging.info("Starting third phase of pipeline: Data Transformation...")
+            data_transformation = DataTransformation(data_ingestion_artifact, data_validation_artifact, self.data_transformation_config)
+            data_transformation_artifact = data_transformation.initiate_data_transformation()
+            logging.info("third phase of pipeline completed: Data Transformation")
 
-    def start_model_trainer(self) -> ModelTrainerArtifact:
+            return data_transformation_artifact
+        except Exception as e:
+            raise CustomException(e, sys) from e
+
+    def start_model_trainer(self, data_transformation_artifact: DataTransformationArtifact) -> ModelTrainerArtifact:
         """
         Train the machine learning model using the transformed data.
 
@@ -126,9 +146,18 @@ class TrainPipeline:
         ModelTrainerArtifact
             Artifact containing trained model path and training metrics.
         """
-        pass
+        try:
+            logging.info("------------------------------------------------------------------------------------------------")
+            logging.info("Starting fourth phase of pipeline: Model Training...")
+            model_trainer = ModelTrainer(data_transformation_artifact, self.model_trainer_config)
+            model_trainer_artifact = model_trainer.initiate_model_trainer()
+            logging.info("fourth phase of pipeline completed: Model Training")
 
-    def start_model_evaluation(self) -> ModelEvaluationArtifact:
+            return model_trainer_artifact
+        except Exception as e:
+            raise CustomException(e, sys) from e
+
+    def start_model_evaluation(self, data_ingestion_artifact: DataIngestionArtifact, model_trainer_artifact: ModelTrainerArtifact) -> ModelEvaluationArtifact:
         """
         Evaluate the newly trained model against the existing production model.
 
@@ -149,7 +178,7 @@ class TrainPipeline:
         """
         pass
 
-    def start_model_pushing(self) -> ModelPusherArtifact:
+    def start_model_pushing(self, model_evaluation_artifact: ModelEvaluationArtifact) -> ModelPusherArtifact:
         """
         Push the accepted model to production or saved model directory.
 
@@ -183,5 +212,15 @@ class TrainPipeline:
         """
         try:
             data_ingestion_artifact = self.start_data_ingestion()
+            data_validation_artifact = self.start_data_validation(data_ingestion_artifact)
+            data_transformation_artifact = self.start_data_transformation(data_ingestion_artifact, data_validation_artifact)
+            model_trainer_artifact = self.start_model_trainer(data_transformation_artifact)
+            model_evaluation_artifact = self.start_model_evaluation(data_ingestion_artifact, model_trainer_artifact)
+
+            if not model_evaluation_artifact.is_model_accepted:
+                logging.info("Model not accepted")
+                return None
+
+            model_pusher_artifact = self.start_model_pushing(model_evaluation_artifact)
         except Exception as e:
-            raise CustomException(e, sys)
+            raise CustomException(e, sys) from e

@@ -7,7 +7,7 @@ class DataIngestionArtifact:
 
 @dataclass
 class DataValidationArtifact:
-    validation_status: str
+    validation_status: bool
     message: str
     validation_report_file_path: str
 
