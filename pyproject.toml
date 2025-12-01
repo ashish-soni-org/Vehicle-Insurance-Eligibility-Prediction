@@ -1,0 +1,11 @@
+[project]
+name = "src"
+version = "0.0.1"
+description = "This project builds a machine learning model to predict whether a customer should be given vehicle insurance. Using customer profile, vehicle details, and past claim history."
+authors = [{name = "Ashish Soni", email = "ashishsoni295work@gmail.com"}]
+
+[tool.setuptools]
+packages = {find = {}} 
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
