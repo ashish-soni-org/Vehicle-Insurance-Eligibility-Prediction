@@ -114,9 +114,9 @@ class ModelTrainer:
             ModelTrainerArtifact: 
                 File path of the trained model and evaluation metrics.
         """
+        logging.info("Starting model training...")
         try:
-            logging.info("Starting model training...")
-            logging.info("loading train and test files...")
+            logging.info("Loading train and test files...")
             train_arr = load_numpy_array(self.data_transformation_artifact.transformed_train_file_path)
             test_arr = load_numpy_array(self.data_transformation_artifact.transformed_test_file_path)
             logging.info("loaded train and test files.")
@@ -129,17 +129,19 @@ class ModelTrainer:
 
             logging.info("checking if accuracy of model beats the threshold")
             if accuracy_score(train_arr[:, -1], trained_model.predict(train_arr[:, :-1])) < self.model_trainer_config.expected_accuracy:
-                raise Exception("Model failed to reach the threshold")
+                raise Exception("model failed to reach the threshold")
             
-            logging.info("Model beats the threshold, saving the model...")
+            logging.info("model beats the threshold, saving the model...")
             new_model = ModelWrapper(preprocessing_obj, trained_model)
             save_object(self.model_trainer_config.trained_model_file_path, new_model)
-            logging.info("Model saved.")
+            logging.info("model saved.")
 
-            logging.info("model training completed.")
-            return ModelTrainerArtifact(
+            model_training_artifact = ModelTrainerArtifact(
                 self.model_trainer_config.trained_model_file_path,
                 trained_model_metrics
             )
+
+            logging.info(f"model training completed, Model Training Artifact: {model_training_artifact}")
+            return model_training_artifact
         except Exception as e:
             raise CustomException(e, sys) from e

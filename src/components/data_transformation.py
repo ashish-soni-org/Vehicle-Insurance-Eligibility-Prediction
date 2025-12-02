@@ -217,8 +217,8 @@ class DataTransformation:
         DataTransformationArtifact
             Contains file paths of saved transformed datasets.
         """
+        logging.info("Starting data tranformation...")
         try:
-            logging.info("Starting data tranformation...")
             if not self.data_validation_artifact.validation_status:
                 raise Exception(self.data_validation_artifact.message)
             
@@ -270,11 +270,13 @@ class DataTransformation:
             save_numpy_array(self.data_transformation_config.transformed_test_file_path, test_arr)
             logging.info("pipeline object and final train test dataframes saved.")
 
-            logging.info("data transformation completed.")
-            return DataTransformationArtifact(
+            data_transformation_artifact = DataTransformationArtifact(
                 self.data_transformation_config.transformed_object_file_path,
                 self.data_transformation_config.transformed_train_file_path,
                 self.data_transformation_config.transformed_test_file_path,
             )
+
+            logging.info(f"data transformation completed, Data Transformation Artifact: {data_transformation_artifact}")
+            return data_transformation_artifact
         except Exception as e:
             raise CustomException(e, sys) from e

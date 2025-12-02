@@ -115,8 +115,8 @@ class DataValidation:
         Returns:
             DataValidationArtifact: The artifact containing validation status and report file path.
         """
+        logging.info("Starting data validation...")
         try:
-            logging.info("Starting data validation...")
             validation_error_msg = ""
             train_df, test_df = (DataValidation.read_data(file_path= self.data_ingestion_artifact.trained_file_path), DataValidation.read_data(file_path= self.data_ingestion_artifact.test_file_path))
 

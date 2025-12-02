@@ -7,6 +7,8 @@ from src.components.data_ingestion import DataIngestion
 from src.components.data_validation import DataValidation
 from src.components.data_transformation import DataTransformation
 from src.components.model_trainer import ModelTrainer
+from src.components.model_evaluation import ModelEvaluation
+from src.components.model_pusher import ModelPusher
 
 from src.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainerConfig, ModelEvaluationConfig, ModelPusherConfig
 from src.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact, DataTransformationArtifact, ModelTrainerArtifact, ModelEvaluationArtifact, ModelPusherArtifact
@@ -176,7 +178,16 @@ class TrainPipeline:
         ModelEvaluationArtifact
             Artifact indicating whether the new model is accepted.
         """
-        pass
+        try:
+            logging.info("------------------------------------------------------------------------------------------------")
+            logging.info("Starting fifth phase of pipeline: Model Evaluation...")
+            model_evaluation = ModelEvaluation(self.model_evaluation_config, data_ingestion_artifact, model_trainer_artifact)
+            model_evaluation_artifact = model_evaluation.initiate_model_evaluation()
+            logging.info("fifth phase of pipeline completed: Model Evaluation")
+            
+            return model_evaluation_artifact
+        except Exception as e:
+            raise CustomException(e, sys) from e
 
     def start_model_pushing(self, model_evaluation_artifact: ModelEvaluationArtifact) -> ModelPusherArtifact:
         """
@@ -196,7 +207,16 @@ class TrainPipeline:
         ModelPusherArtifact
             Artifact containing the final deployed model path.
         """
-        pass
+        try:
+            logging.info("------------------------------------------------------------------------------------------------")
+            logging.info("Starting sixth phase of pipeline: Model Pushing...")
+            model_pusher = ModelPusher(model_evaluation_artifact, self.model_pushing_config)
+            model_pusher_artifact = model_pusher.initiate_model_pusher()
+            logging.info("sixth phase of pipeline completed: Model Pushing")
+            
+            return model_pusher_artifact
+        except Exception as e:
+            raise CustomException(e, sys) from e
 
     def run_pipeline(self) -> None:
         """
