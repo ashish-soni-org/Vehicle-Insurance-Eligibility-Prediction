@@ -87,10 +87,13 @@ class SimpleStorageService:
         """
         try:
             bucket = self.get_bucket(bucket_name)
-            file_objects = [file_objects for file_objects in bucket.objects.filter(file_name)]
+            file_objects = [file_object for file_object in bucket.objects.filter(Prefix=file_name)]
             func = lambda x: x[0] if len(x) == 1 else x
             file_objs = func(file_objects)
+            logging.info("Exited the get_file_object method of SimpleStorageService class")
             return file_objs
+        except Exception as e:
+            raise CustomException(e, sys) from e
         except Exception as e:
             raise CustomException(e, sys) from e
 
@@ -112,6 +115,7 @@ class SimpleStorageService:
             model_obj = self.read_object(file_objects, decode = False)
             model = pickle.loads(model_obj)
             logging.info("production model loaded from s3 bucket")
+            logging.debug(f"Model object size:, {sys.getsizeof(model)}, bytes")
         
             return model
         except Exception as e:
@@ -210,7 +214,7 @@ class SimpleStorageService:
             raise CustomException(e, sys) from e
 
     @staticmethod
-    def read_object(self, object_name: str, decode: bool = True, make_readable: bool = False) -> Union[StringIO, str, bytes]:
+    def read_object(object_name: str, decode: bool = True, make_readable: bool = False) -> Union[StringIO, str, bytes]:
         """
         Read raw or decoded content from an S3 object.
 
@@ -228,13 +232,11 @@ class SimpleStorageService:
         try:
             # read and decode the object content if 'decode= True'
             func = (
-                lambda: object_name.get()["Body"].read().decode()
-                if decode else object_name.get()["Body"].read()
-            )
-
+                    lambda: object_name.get()["Body"].read().decode()
+                    if decode else object_name.get()["Body"].read()
+                )
             # convert StringIO if 'make_readable= True'
             conv_func = lambda: StringIO(func()) if make_readable else func()
-
             return conv_func()
         except Exception as e:
             raise CustomException(e, sys) from e

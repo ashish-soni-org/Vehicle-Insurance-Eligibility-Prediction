@@ -38,7 +38,7 @@ class CloudModelWrapper:
         self.bucket_name = bucket_name
         self.s3 = SimpleStorageService()
         self.model_path = model_path
-        self.load_model: ModelWrapper = None
+        self.loaded_model: ModelWrapper = None
 
     def is_model_present(self, model_path: str) -> bool:
         """
@@ -110,6 +110,6 @@ class CloudModelWrapper:
         try:
             if self.loaded_model is None:
                 self.loaded_model = self.load_model()
-            return self.loaded_model.predict(dataframe)
+            return self.loaded_model.predict(dataframe=dataframe)
         except Exception as e:
             raise CustomException(e, sys) from e
