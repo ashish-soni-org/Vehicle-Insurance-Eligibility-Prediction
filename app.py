@@ -97,7 +97,7 @@ async def index(request: Request):
     """
     return templates.TemplateResponse("index.html", {"request": request, "context": "Rendering"})
 
-@app.get("/Vehicle-Insurance-Eligibility-Prediction/train")
+@app.get("/train")
 async def trainRouteClient() -> Response:
     """
     Trigger model training pipeline via API call.
