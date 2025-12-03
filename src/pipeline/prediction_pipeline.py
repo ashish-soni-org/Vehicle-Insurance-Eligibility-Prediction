@@ -87,6 +87,8 @@ class VehicleData:
                 "Vehicle_Damage_Yes": [self.Vehicle_Damage_Yes]
             }
 
+            return input_data
+
         except Exception as e:
             raise CustomException(e, sys) from e
 
