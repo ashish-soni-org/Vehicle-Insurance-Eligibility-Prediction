@@ -31,13 +31,13 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
           IMAGE_TAG: latest
         run: |
-          echo "🔥 Clearing Docker cache to force fresh rebuild"
+          echo "Clearing Docker cache to force fresh rebuild"
           docker system prune -af
 
-          echo "🔥 Building new Docker image..."
+          echo "Building new Docker image..."
           docker build --no-cache -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
-          echo "🔥 Pushing new Docker image to ECR..."
+          echo "Pushing new Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -56,7 +56,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws-region: ${{ secrets.AWS_REGION_NAME }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -67,20 +67,19 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
         run: |
-          echo "🔥 Stopping old container (if exists)..."
+          echo "Stopping old container (if exists)..."
           docker rm -f project1 || true
 
-          echo "🔥 Pulling latest Docker image..."
+          echo "Pulling latest Docker image..."
           docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          echo "🔥 Running container..."
+          echo "Running container..."
           docker run -d \
             -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-            -e AWS_DEFAULT_REGION="${{ secrets.AWS_DEFAULT_REGION }}" \
-            -e MONGODB_URL="${{ secrets.MONGODB_URL }}" \
+            -e AWS_DEFAULT_REGION="${{ secrets.AWS_REGION_NAME }}" \
             --name project1 \
             -p 8101:5000 \
             $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          echo "🔥 Deployment completed successfully!"
+          echo "Deployment completed successfully!"

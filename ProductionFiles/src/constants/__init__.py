@@ -1,0 +1,9 @@
+MODEL_FILE_NAME = "model.pkl"
+MODEL_BUCKET_NAME = "project-vehicle-insurance-eligibility-prediction-bucket"
+
+AWS_ACCESS_KEY_ID_ENV_KEY = "AWS_ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY_ENV_KEY = "AWS_SECRET_ACCESS_KEY"
+REGION_NAME = "AWS_REGION_NAME"
+
+APP_HOST = "0.0.0.0"
+APP_PORT = 5000
