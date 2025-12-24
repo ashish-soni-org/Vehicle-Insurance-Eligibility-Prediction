@@ -14,7 +14,7 @@ response = get_client().get_secret_value(
     SecretId=SECRET_NAME
 )
 
-secret_string = response["runner"]
+secret_string = response
 secrets = json.loads(secret_string)
 
 def main():
