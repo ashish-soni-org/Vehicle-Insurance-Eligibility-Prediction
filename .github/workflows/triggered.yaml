@@ -44,6 +44,24 @@ jobs:
   process_data:
     name: Consume Python Outputs
     needs: generate_data
+    if: fromJSON(needs.generate_data.outputs.services_available).ECR == ''
+    runs-on: self-hosted
+    
+    steps:
+      - name: Print Data from Previous Job
+        run: |
+          echo "Full JSON Details: ${{ needs.generate_data.outputs.services_available }}"
+          echo "REPO: ${{ github.event.repository.name }}"
+          
+      - name: Use specific JSON value
+        run: |
+          # Use jq to parse the JSON string passed between jobs
+          echo "The target region is: $REGION"
+
+  proces_s_data:
+    name: Consume Python Outputs
+    needs: generate_data
+    if: fromJSON(needs.generate_data.outputs.services_available).S3 != ''
     runs-on: self-hosted
     
     steps:
