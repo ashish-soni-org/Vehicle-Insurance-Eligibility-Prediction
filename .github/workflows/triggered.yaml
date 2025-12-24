@@ -28,6 +28,9 @@ jobs:
       - name: Execute Python Script
         id: py_gen
         run: python .github/workflows/teting.py
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION_NAME }}
+          SECRET_FILE_NAME: ${{ secrets.SECRETS_FILE_NAME }}
 
   process_data:
     name: Consume Python Outputs
