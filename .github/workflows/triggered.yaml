@@ -7,11 +7,10 @@ on:
 jobs:
   generate_data:
     name: Run Python Logic
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Map the step outputs to job outputs
     outputs:
-      runner: ${{ steps.py_gen.outputs.runner_details }}
-      services_available: ${{ steps.py_gen.outputs.available_services_details }}
+      services_available: ${{ steps.py_gen.outputs.requested_services }}
     
     steps:
       - name: Setup AWS Credentials
@@ -50,7 +49,6 @@ jobs:
     steps:
       - name: Print Data from Previous Job
         run: |
-          echo "Message received: ${{ needs.generate_data.outputs.runner }}"
           echo "Full JSON Details: ${{ needs.generate_data.outputs.services_available }}"
           echo "REPO: ${{ github.event.repository.name }}"
           
