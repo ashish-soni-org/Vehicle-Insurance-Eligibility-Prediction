@@ -9,7 +9,7 @@ REGION = os.getenv("AWS_REGION")
 ACTION = os.getenv("ACTION_TYPE")
 SECRET_NAME = os.getenv("SECRET_FILE_NAME")
 # The repo we are currently targeting for the service lookup
-TARGET_REPO = os.getenv("UPDATE_REPO") 
+TARGET_REPO = os.getenv("REPO") 
 
 # Constants
 CREATE_FILE_STRUCTURE = "CREATE_FILE_STRUCTURE"
