@@ -35,7 +35,8 @@ def main():
         if output_file:
             with open(output_file, "a") as f:
                 # We pass the JSON string so it can be parsed by 'jq' in later jobs
-                f.write(f"runner_details={json.dumps(secrets_dict)}\n")
+                f.write(f"runner_details={secrets_dict["runner"]}\n")
+                f.write(f"available_services_details={json.dumps(secrets_dict)}\n")
         
         print(f"Successfully fetched and exported secret: {SECRET_NAME}")
 
