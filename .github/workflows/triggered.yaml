@@ -41,3 +41,31 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
           IMAGE_TAG: latest
+
+  deploy_website_and_projects:
+    # needs: [hosting_runner, configure_nginx, startup_service_docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ashish-soni-org
+          repositories: Terraform-Ansible
+
+      - name: Check Permissions
+        run: |
+            curl -i \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/ashish-soni-org/Terraform-Ansible
+
+      - name: Trigger Other Repositories
+        run: |
+            curl -X POST \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/ashish-soni-org/Terraform-Ansible/dispatches \
+            -d '{"event_type":"event-on-demand-deploy","client_payload":{"from":"repo-a"}}'
