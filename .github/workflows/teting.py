@@ -15,7 +15,7 @@ response = get_client().get_secret_value(
 )
 
 secret_string = response
-secrets = json.loads(secret_string)
+# secrets = json.loads(secret_string)
 
 def main():
 
@@ -24,7 +24,7 @@ def main():
     if output_file:
         with open(output_file, "a") as f:
             f.write(f"runner_details={secret_string}\n")
-            f.write(f"available_services_details={secrets}\n")
+            # f.write(f"available_services_details={secrets}\n")
             # f.write(f"runner_details={json.dumps(secret_string)}\n")
             # f.write(f"available_services_details={json.dumps(secrets)}\n")
 

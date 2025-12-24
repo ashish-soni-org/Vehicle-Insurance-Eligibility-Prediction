@@ -11,7 +11,7 @@ jobs:
     # Map the step outputs to job outputs
     outputs:
       runner: ${{ steps.py_gen.outputs.runner_details }}
-      services_available: ${{ steps.py_gen.outputs.available_services_details }}
+    #   services_available: ${{ steps.py_gen.outputs.available_services_details }}
     
     steps:
       - name: Setup AWS Credentials
@@ -20,7 +20,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION_NAME }}
-          
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -48,7 +48,7 @@ jobs:
       - name: Print Data from Previous Job
         run: |
           echo "Message received: ${{ needs.generate_data.outputs.runner }}"
-          echo "Full JSON Details: ${{ needs.generate_data.outputs.services_available }}"
+        #   echo "Full JSON Details: ${{ needs.generate_data.outputs.services_available }}"
           
       - name: Use specific JSON value
         run: |
