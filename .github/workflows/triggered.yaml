@@ -59,7 +59,7 @@ jobs:
           echo "The target region is: $REGION"
 
   proces_s_data:
-    name: Consume Python Outputs
+    name: Consume Python 
     needs: generate_data
     if: fromJSON(needs.generate_data.outputs.services_available).S3 != ''
     runs-on: self-hosted
