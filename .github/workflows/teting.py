@@ -1,30 +1,30 @@
 import os
 import json
+import boto3
+from botocore.exceptions import ClientError
+
+# Configuration from Environment Variables
+REGION = os.getenv("AWS_REGION")
+SECRET_NAME = os.getenv("SECRET_FILE_NAME")
+
+def get_client():
+    return boto3.client("secretsmanager", region_name=REGION)
+
+response = get_client().get_secret_value(
+    SecretId=SECRET_NAME
+)
+
+secret_string = response["runner"]
+secrets = json.loads(secret_string)
 
 def main():
-    # Data to pass to other jobs
-    runner_info = {
-        "status": "active",
-        "region": "us-east-1",
-        "env": "production"
-    }
-    
-    # 1. Standard Output for visibility
-    print(f"Generating metadata for runner...")
 
-    # 2. Writing to GITHUB_OUTPUT
-    # GitHub provides the path to a file via the GITHUB_OUTPUT environment variable
     output_file = os.getenv('GITHUB_OUTPUT')
     
     if output_file:
         with open(output_file, "a") as f:
-            # Simple string output
-            f.write("hello_msg=Hello World from Python!\n")
-            # Complex JSON output (useful for matrices or detailed objects)
-            f.write(f"runner_details={json.dumps(runner_info)}\n")
-            f.write("trigger_deploy=true\n")
-            
-    print("Metadata successfully written to GITHUB_OUTPUT.")
+            f.write(f"runner_details={json.dumps(secret_string)}\n")
+            f.write(f"available_services_details={json.dumps(secrets)}\n")
 
 if __name__ == "__main__":
     main()

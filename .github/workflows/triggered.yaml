@@ -10,9 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     # Map the step outputs to job outputs
     outputs:
-      message: ${{ steps.py_gen.outputs.hello_msg }}
-      details: ${{ steps.py_gen.outputs.runner_details }}
-      deploy: ${{ steps.py_gen.outputs.trigger_deploy }}
+      runner: ${{ steps.py_gen.outputs.runner_details }}
+      services_available: ${{ steps.py_gen.outputs.available_services_details }}
     
     steps:
       - name: Checkout Code
@@ -31,19 +30,16 @@ jobs:
     name: Consume Python Outputs
     needs: generate_data
     runs-on: ubuntu-latest
-    # This job only runs if the Python script set trigger_deploy to true
-    if: ${{ needs.generate_data.outputs.deploy == 'true' }}
     
     steps:
       - name: Print Data from Previous Job
         run: |
-          echo "Message received: ${{ needs.generate_data.outputs.message }}"
-          echo "Full JSON Details: ${{ needs.generate_data.outputs.details }}"
+          echo "Message received: ${{ needs.generate_data.outputs.runner }}"
+          echo "Full JSON Details: ${{ needs.generate_data.outputs.services_available }}"
           
       - name: Use specific JSON value
         run: |
           # Use jq to parse the JSON string passed between jobs
-          REGION=$(echo '${{ needs.generate_data.outputs.details }}' | jq -r '.region')
           echo "The target region is: $REGION"
 
   Continuous-Integration:
