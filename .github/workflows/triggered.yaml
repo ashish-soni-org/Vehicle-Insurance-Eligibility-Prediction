@@ -42,7 +42,7 @@ jobs:
   process_data:
     name: Consume Python Outputs
     needs: generate_data
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.generate_data.outputs.runner }}
     
     steps:
       - name: Print Data from Previous Job
