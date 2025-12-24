@@ -42,7 +42,7 @@ jobs:
   process_data:
     name: Consume Python Outputs
     needs: generate_data
-    runs-on: ${{ needs.generate_data.outputs.runner }}
+    runs-on: self-hosted
     
     steps:
       - name: Print Data from Previous Job
