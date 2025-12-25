@@ -47,7 +47,7 @@ jobs:
   request_service:
     name: Request for Required Service
     needs: get_required_resources
-    if: fromJSON(needs.get_required_resources.outputs.services)[vars.SERVICES_REQUIRED] == ''
+    if: fromJSON(needs.get_required_resources.outputs.services)."${{ env.SERVICES_REQUIRED }}" == ''
     runs-on: self-hosted
     
     steps:
@@ -59,6 +59,10 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ashish-soni-org
           repositories: Terraform-Ansible
+      
+      - name: Print Data from Previous Job
+        run: |
+          echo "service_required: ${{ needs.generate_data.outputs.services_available }}"
 
       - name: Check Permissions
         run: |
