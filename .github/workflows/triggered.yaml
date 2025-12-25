@@ -142,7 +142,7 @@ jobs:
   deploy_project:
     name: Trigger Deployment
     runs-on: self-hosted
-    # needs: on_demand_build
+    needs: on_demand_build
     steps:
       - name: Generate Token to Trigger Deploy
         id: app-token
