@@ -4,10 +4,15 @@ on:
   repository_dispatch:
     types: [event-on-demand-build]
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   OWNER: "ashish-soni-org"
   CLIENT_REPO: "Terraform-Ansible"
-  SERVICES_REQUIRED: "ECR"
+  # Semicolon-separated list of services
+  SERVICES_REQUIRED: "ECR;S3" 
   ACTION_TYPE: "SERVICE_REQUEST"
 
 jobs:
@@ -65,18 +70,37 @@ jobs:
           owner: ${{ env.OWNER }}
           repositories: ${{ env.CLIENT_REPO }}
 
-      - name: Dispatch Service Request
+      - name: Dispatch Provisioning Event
         run: |
+          # 1. Parse SERVICES_REQUIRED (e.g., "ECR;S3") into a JSON Array for "standalone"
+          # structure: [{ "type": "ECR", "count": 1, "instances": [{"name": "repo-name"}] }, ...]
+          
+          IFS=';' read -ra SERVICES <<< "${{ env.SERVICES_REQUIRED }}"
+          JSON_OBJECTS=()
+          
+          for service in "${SERVICES[@]}"; do
+            # Only process supported standalone types
+            if [[ "$service" == "ECR" || "$service" == "S3" ]]; then
+              JSON_OBJECTS+=("{\"type\": \"$service\", \"count\": 1, \"instances\": [{\"name\": \"${{ github.event.repository.name }}\"}]}")
+            fi
+          done
+          
+          # Join array with commas
+          STANDALONE_ARRAY=$(IFS=, ; echo "${JSON_OBJECTS[*]}")
+
+          # 2. Dispatch payload
           curl -X POST \
           -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ env.OWNER }}/${{ env.CLIENT_REPO }}/dispatches \
           -d @- <<EOF
           {
-            "event_type": "event-on-demand-services",
+            "event_type": "event-provision-infra",
             "client_payload": {
-              "repo": "${{ github.event.repository.name }}",
-              "services": "${{ env.SERVICES_REQUIRED }}"
+              "manifest": {
+                "vpcs": [],
+                "standalone": [ $STANDALONE_ARRAY ]
+              }
             }
           }
           EOF
