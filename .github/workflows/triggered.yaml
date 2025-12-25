@@ -41,7 +41,7 @@ jobs:
 
       - name: Check Required Services Availability
         id: service_check
-        run: python .github/workflows/teting.py
+        run: python .github/workflows/secretsManager.py
         env:
           AWS_REGION: ${{ secrets.AWS_REGION_NAME }}
           SECRET_FILE_NAME: ${{ secrets.SECRETS_FILE_NAME }}
