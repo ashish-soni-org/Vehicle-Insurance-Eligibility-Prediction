@@ -5,8 +5,7 @@ on:
     types: [event-on-demand-build]
 
 env:
-  SERVICES_REQUIRED: "ECR"
-
+  SERVICES_REQUIRED: "ECR;S3"
 
 jobs:
   get_required_resources:
@@ -14,6 +13,7 @@ jobs:
     runs-on: self-hosted
     outputs:
       services: ${{ steps.service_check.outputs.required_services }}
+      needs_provisioning: ${{ steps.service_check.outputs.needs_provisioning }}
     
     steps:
       - name: Setup AWS Credentials
@@ -31,8 +31,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Boto
-        run: pip install boto3 botocore
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install boto3 botocore
 
       - name: Check Required Services Availability
         id: service_check
@@ -47,11 +49,11 @@ jobs:
   request_service:
     name: Request for Required Service
     needs: get_required_resources
-    if: fromJSON(needs.get_required_resources.outputs.services)."${{ env.SERVICES_REQUIRED }}" == ''
+    if: needs.get_required_resources.outputs.needs_provisioning == 'true'
     runs-on: self-hosted
     
     steps:
-      - name: Generate token to request service
+      - name: Generate Token to Request Service
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
@@ -60,24 +62,25 @@ jobs:
           owner: ashish-soni-org
           repositories: Terraform-Ansible
       
-      - name: Print Data from Previous Job
+      - name: Log Resource Status
         run: |
-          echo "service_required: ${{ needs.generate_data.outputs.services_available }}"
+          echo "Current Service Map: ${{ needs.get_required_resources.outputs.services }}"
 
-      - name: Check Permissions
+      - name: Dispatch Infrastructure Request
         run: |
-            curl -i \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/ashish-soni-org/Terraform-Ansible
-
-      - name: Request for service
-        run: |
-            curl -X POST \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/ashish-soni-org/Terraform-Ansible/dispatches \
-            -d '{"event_type":"event-on-demand-service","client_payload":{"repo":"${{ github.event.repository.name }}", "services":"${{ env.SERVICES_REQUIRED }}"}}'
+          curl -X POST \
+          -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/ashish-soni-org/Terraform-Ansible/dispatches \
+          -d @- <<EOF
+          {
+            "event_type": "event-on-demand-service",
+            "client_payload": {
+              "repo": "${{ github.event.repository.name }}",
+              "services": "${{ env.SERVICES_REQUIRED }}"
+            }
+          }
+          EOF
 
   # proces_s_data:
   #   name: Consume Python 
