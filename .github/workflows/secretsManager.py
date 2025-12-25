@@ -20,6 +20,7 @@ SERVICES_JSON = os.getenv("PROVISIONED_MAP", "{}")
 CREATE_FILE_STRUCTURE = "CREATE_FILE_STRUCTURE"
 SERVICE_REQUEST = "SERVICE_REQUEST"
 ADD_SERVICES = "ADD_SERVICES"
+CHECK_MAPPING = "CHECK_MAPPING"
 
 def get_client():
     """Initializes the Boto3 Secrets Manager client."""
@@ -32,11 +33,19 @@ def handle_secret():
         # ------------------------------------------------------------------
         # 1. Fetch Existing Secret
         # ------------------------------------------------------------------
-        full_data = {"repos": {}}
+        full_data = {
+            "proxy": "http://127.0.0.1/",
+            "max_port_used": "7999", # Start counting from 8000
+            "repo_mapping": {},
+            "repos": {}
+        }
+        
         try:
             response = client.get_secret_value(SecretId=SECRET_NAME)
             if 'SecretString' in response:
-                full_data = json.loads(response['SecretString'])
+                # Merge existing data with default structure to ensure keys exist
+                existing_data = json.loads(response['SecretString'])
+                full_data.update(existing_data)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 print(f"Secret {SECRET_NAME} not found. A new one will be created.")
@@ -47,14 +56,17 @@ def handle_secret():
         # 2. Action Handler: CREATE_FILE_STRUCTURE
         # ------------------------------------------------------------------
         if ACTION == CREATE_FILE_STRUCTURE:
-            # Initialize structure. If a runner host is passed, store it.
+            # Initialize or Reset structure defaults if missing
             runner_host = os.getenv("SELF_HOSTED_RUNNER")
             
-            if "repos" not in full_data:
-                full_data["repos"] = {}
-                
             if runner_host:
                 full_data["runner_host"] = runner_host
+            
+            # Ensure strict schema existence
+            full_data.setdefault("repos", {})
+            full_data.setdefault("repo_mapping", {})
+            full_data.setdefault("max_port_used", "7999")
+            full_data.setdefault("proxy", "http://127.0.0.1/")
 
             client.put_secret_value(SecretId=SECRET_NAME, SecretString=json.dumps(full_data))
             print(f"SUCCESS: Infrastructure secrets initialized for {SECRET_NAME}")
@@ -64,9 +76,9 @@ def handle_secret():
         # ------------------------------------------------------------------
         elif ACTION == SERVICE_REQUEST:
             requested_env = os.getenv("SERVICES", "")
-            # Split "ECR;S3" into ["ECR", "S3"]
             requested_list = [s.strip() for s in requested_env.split(";") if s.strip()]
             
+            # Check services in the 'repos' node
             repo_services = full_data.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
             
             result_map = {}
@@ -78,7 +90,6 @@ def handle_secret():
                 if not val:
                     needs_provisioning = True
             
-            # Write outputs for GitHub Actions
             output_file = os.getenv('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, "a") as f:
@@ -97,23 +108,19 @@ def handle_secret():
                 print(f"ERROR: Invalid JSON data received: {SERVICES_JSON}")
                 sys.exit(1)
             
-            # Normalize target key (Terraform keys are lowercase)
             target_key = TARGET_REPO.lower() if TARGET_REPO else ""
             updates = {}
 
-            # Map Terraform Output Keys -> Secret Manager Keys
-            # 1. Map S3
             if "s3_buckets" in tf_data and target_key in tf_data["s3_buckets"]:
                 updates["S3"] = tf_data["s3_buckets"][target_key]
             
-            # 2. Map ECR
             if "ecr_repositories" in tf_data and target_key in tf_data["ecr_repositories"]:
                 updates["ECR"] = tf_data["ecr_repositories"][target_key]
 
             if not updates:
                 print(f"WARNING: No resources found for repo '{TARGET_REPO}' in provisioned map.")
             
-            # Update the nested structure
+            # Update repos -> RepoName -> services
             repos = full_data.setdefault("repos", {})
             repo_node = repos.setdefault(TARGET_REPO, {})
             services_node = repo_node.setdefault("services", {})
@@ -125,6 +132,58 @@ def handle_secret():
                 SecretString=json.dumps(full_data)
             )
             print(f"SUCCESS: Updated {TARGET_REPO} in Secrets Manager with: {updates}")
+
+        # ------------------------------------------------------------------
+        # 5. Action Handler: CHECK_MAPPING (For Deployment & Port Assignment)
+        # ------------------------------------------------------------------
+        elif ACTION == CHECK_MAPPING:
+            # Use the new schema: repo_mapping and max_port_used
+            repo_mapping = full_data.get("repo_mapping", {})
+            
+            is_mapped = False
+            assigned_port = ""
+
+            if TARGET_REPO in repo_mapping:
+                # SCENARIO A: Already Mapped
+                is_mapped = True
+                assigned_port = repo_mapping[TARGET_REPO]
+                print(f"Repo {TARGET_REPO} is already mapped to port {assigned_port}")
+            else:
+                # SCENARIO B: New Mapping Required
+                try:
+                    current_max = int(full_data.get("max_port_used", "7999"))
+                except ValueError:
+                    current_max = 7999
+
+                next_port = current_max + 1
+                assigned_port = str(next_port)
+                
+                # Update Data Structure
+                full_data["repo_mapping"][TARGET_REPO] = assigned_port
+                full_data["max_port_used"] = assigned_port
+                
+                # Update Secret
+                client.put_secret_value(
+                    SecretId=SECRET_NAME,
+                    SecretString=json.dumps(full_data)
+                )
+                print(f"Assigned new port {assigned_port} for {TARGET_REPO}")
+
+            # Construct full proxy target for Ansible (e.g., http://127.0.0.1:8001/)
+            base_proxy = full_data.get("proxy", "http://127.0.0.1/")
+            # Ensure base_proxy ends with / before appending port is tricky if it is an IP.
+            # Standardizing: Base "http://127.0.0.1/" + port + "/" -> "http://127.0.0.1:8000/"
+            
+            # Strip trailing slash to append port safely
+            clean_base = base_proxy.rstrip("/")
+            proxy_target = f"{clean_base}:{assigned_port}/"
+
+            # Write outputs
+            output_file = os.getenv('GITHUB_OUTPUT')
+            if output_file:
+                with open(output_file, "a") as f:
+                    f.write(f"is_mapped={'true' if is_mapped else 'false'}\n")
+                    f.write(f"proxy_target={proxy_target}\n")
 
     except Exception as e:
         print(f"FATAL ERROR: {str(e)}")
