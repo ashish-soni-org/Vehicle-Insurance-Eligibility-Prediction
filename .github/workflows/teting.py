@@ -70,7 +70,7 @@ def handle_secret():
             output_file = os.getenv('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, "a") as f:
-                    f.write(f"requested_services={json.dumps(result_map)}\n")
+                    f.write(f"required_services={json.dumps(result_map)}\n")
             
             print(f"Service Request processed for {TARGET_REPO}: {result_map}")
 
