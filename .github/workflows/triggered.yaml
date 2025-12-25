@@ -11,6 +11,7 @@ permissions:
 env:
   OWNER: "ashish-soni-org"
   CLIENT_REPO: "Terraform-Ansible"
+  # Semicolon-separated list of services
   SERVICES_REQUIRED: "ECR;S3" 
   ACTION_TYPE: "SERVICE_REQUEST"
 
@@ -69,7 +70,7 @@ jobs:
           owner: ${{ env.OWNER }}
           repositories: ${{ env.CLIENT_REPO }}
 
-      - name: Dispatch On Demand Services
+      - name: Dispatch Provisioning Event
         run: |
           # 1. Parse SERVICES_REQUIRED (e.g., "ECR;S3") into a JSON Array of service objects
           # Target structure per item: { "type": "ECR", "count": 1, "instances": [{"name": "repo-name"}] }
@@ -118,6 +119,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION_NAME }}
+      
+      # FIX: Ensure the runner user can access the Docker socket
+      - name: Fix Docker Socket Permissions
+        run: |
+          sudo chmod 666 /var/run/docker.sock
 
       - name: Login to Amazon ECR
         id: login_ecr
