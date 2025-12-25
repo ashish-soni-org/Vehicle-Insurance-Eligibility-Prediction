@@ -56,13 +56,11 @@ def handle_secret():
         # 2. Action Handler: CREATE_FILE_STRUCTURE
         # ------------------------------------------------------------------
         if ACTION == CREATE_FILE_STRUCTURE:
-            # Initialize or Reset structure defaults if missing
             runner_host = os.getenv("SELF_HOSTED_RUNNER")
             
             if runner_host:
                 full_data["runner_host"] = runner_host
             
-            # Ensure strict schema existence
             full_data.setdefault("repos", {})
             full_data.setdefault("repo_mapping", {})
             full_data.setdefault("max_port_used", "7999")
@@ -78,7 +76,6 @@ def handle_secret():
             requested_env = os.getenv("SERVICES", "")
             requested_list = [s.strip() for s in requested_env.split(";") if s.strip()]
             
-            # Check services in the 'repos' node
             repo_services = full_data.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
             
             result_map = {}
@@ -120,7 +117,6 @@ def handle_secret():
             if not updates:
                 print(f"WARNING: No resources found for repo '{TARGET_REPO}' in provisioned map.")
             
-            # Update repos -> RepoName -> services
             repos = full_data.setdefault("repos", {})
             repo_node = repos.setdefault(TARGET_REPO, {})
             services_node = repo_node.setdefault("services", {})
@@ -137,7 +133,6 @@ def handle_secret():
         # 5. Action Handler: CHECK_MAPPING (For Deployment & Port Assignment)
         # ------------------------------------------------------------------
         elif ACTION == CHECK_MAPPING:
-            # Use the new schema: repo_mapping and max_port_used
             repo_mapping = full_data.get("repo_mapping", {})
             
             is_mapped = False
@@ -158,25 +153,24 @@ def handle_secret():
                 next_port = current_max + 1
                 assigned_port = str(next_port)
                 
-                # Update Data Structure
                 full_data["repo_mapping"][TARGET_REPO] = assigned_port
                 full_data["max_port_used"] = assigned_port
                 
-                # Update Secret
                 client.put_secret_value(
                     SecretId=SECRET_NAME,
                     SecretString=json.dumps(full_data)
                 )
                 print(f"Assigned new port {assigned_port} for {TARGET_REPO}")
 
-            # Construct full proxy target for Ansible (e.g., http://127.0.0.1:8001/)
+            # Construct full proxy target
             base_proxy = full_data.get("proxy", "http://127.0.0.1/")
-            # Ensure base_proxy ends with / before appending port is tricky if it is an IP.
-            # Standardizing: Base "http://127.0.0.1/" + port + "/" -> "http://127.0.0.1:8000/"
-            
-            # Strip trailing slash to append port safely
             clean_base = base_proxy.rstrip("/")
             proxy_target = f"{clean_base}:{assigned_port}/"
+
+            # Retrieve ECR Repository Name from the Secret's Service map
+            # Default to TARGET_REPO if not found (fallback)
+            repo_services = full_data.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
+            ecr_repo_name = repo_services.get("ECR", TARGET_REPO)
 
             # Write outputs
             output_file = os.getenv('GITHUB_OUTPUT')
@@ -184,6 +178,7 @@ def handle_secret():
                 with open(output_file, "a") as f:
                     f.write(f"is_mapped={'true' if is_mapped else 'false'}\n")
                     f.write(f"proxy_target={proxy_target}\n")
+                    f.write(f"ecr_repo_name={ecr_repo_name}\n")
 
     except Exception as e:
         print(f"FATAL ERROR: {str(e)}")
