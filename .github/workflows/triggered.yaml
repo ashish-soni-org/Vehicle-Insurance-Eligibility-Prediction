@@ -5,7 +5,7 @@ on:
     types: [event-on-demand-build]
 
 env:
-  SERVICES_REQUIRED: "ECR;S3"
+  SERVICES_REQUIRED: "S3"
 
 jobs:
   get_required_resources:
