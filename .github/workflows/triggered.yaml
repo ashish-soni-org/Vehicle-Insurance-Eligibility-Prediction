@@ -69,7 +69,7 @@ jobs:
           owner: ${{ env.OWNER }}
           repositories: ${{ env.CLIENT_REPO }}
 
-      - name: Dispatch Provisioning Event
+      - name: Dispatch On Demand Services
         run: |
           # 1. Parse SERVICES_REQUIRED (e.g., "ECR;S3") into a JSON Array of service objects
           # Target structure per item: { "type": "ECR", "count": 1, "instances": [{"name": "repo-name"}] }
@@ -130,7 +130,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: ${{ steps.login_ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
+          ECR_REPOSITORY: ${{ fromJson(needs.get_required_services.outputs.services)['ECR'] }}
           IMAGE_TAG: latest
 
   deploy_project:
