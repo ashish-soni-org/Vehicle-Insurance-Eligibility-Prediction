@@ -4,13 +4,16 @@ import boto3
 import sys
 from botocore.exceptions import ClientError
 
+# ------------------------------------------------------------------
 # Configuration from Environment Variables
+# ------------------------------------------------------------------
 REGION = os.getenv("AWS_REGION")
 ACTION = os.getenv("ACTION_TYPE")
 SECRET_NAME = os.getenv("SECRET_FILE_NAME")
 TARGET_REPO = os.getenv("REPO_NAME") 
 
-# This should be a JSON string like: {"S3": "my-bucket-name", "ECR": "my-repo-name"}
+# JSON string from Terraform Output: 
+# { "s3_buckets": { "repo-name": "bucket-id" }, "ecr_repositories": { "repo-name": "ecr-name" } }
 SERVICES_JSON = os.getenv("PROVISIONED_MAP", "{}")
 
 # Constants
@@ -26,59 +29,102 @@ def handle_secret():
     client = get_client()
     
     try:
-        # Fetch current secret content for any operational action
+        # ------------------------------------------------------------------
+        # 1. Fetch Existing Secret
+        # ------------------------------------------------------------------
+        full_data = {"repos": {}}
         try:
             response = client.get_secret_value(SecretId=SECRET_NAME)
-            full_data = json.loads(response['SecretString'])
+            if 'SecretString' in response:
+                full_data = json.loads(response['SecretString'])
         except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException' and ACTION == CREATE_FILE_STRUCTURE:
-                full_data = {"repos": {}}
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                print(f"Secret {SECRET_NAME} not found. A new one will be created.")
             else:
                 raise e
 
+        # ------------------------------------------------------------------
+        # 2. Action Handler: CREATE_FILE_STRUCTURE
+        # ------------------------------------------------------------------
         if ACTION == CREATE_FILE_STRUCTURE:
-            full_data = {"repos": {}}
-            client.put_secret_value(SecretId=SECRET_NAME, SecretString=json.dumps(full_data))
-            print(f"Structure reset/created: {SECRET_NAME}")
+            # Initialize structure. If a runner host is passed, store it.
+            runner_host = os.getenv("SELF_HOSTED_RUNNER")
+            
+            if "repos" not in full_data:
+                full_data["repos"] = {}
+                
+            if runner_host:
+                full_data["runner_host"] = runner_host
 
+            client.put_secret_value(SecretId=SECRET_NAME, SecretString=json.dumps(full_data))
+            print(f"SUCCESS: Infrastructure secrets initialized for {SECRET_NAME}")
+
+        # ------------------------------------------------------------------
+        # 3. Action Handler: SERVICE_REQUEST (Check Availability)
+        # ------------------------------------------------------------------
         elif ACTION == SERVICE_REQUEST:
-            # Logic for checking service availability (as implemented previously)
             requested_env = os.getenv("SERVICES", "")
+            # Split "ECR;S3" into ["ECR", "S3"]
             requested_list = [s.strip() for s in requested_env.split(";") if s.strip()]
+            
             repo_services = full_data.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
             
-            result_map = {service: repo_services.get(service, "") for service in requested_list}
-            needs_provisioning = any(val == "" for val in result_map.values())
+            result_map = {}
+            needs_provisioning = False
+
+            for req in requested_list:
+                val = repo_services.get(req, "")
+                result_map[req] = val
+                if not val:
+                    needs_provisioning = True
             
+            # Write outputs for GitHub Actions
             output_file = os.getenv('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, "a") as f:
                     f.write(f"required_services={json.dumps(result_map)}\n")
                     f.write(f"needs_provisioning={'true' if needs_provisioning else 'false'}\n")
+            
+            print(f"Check Complete. Needs Provisioning: {needs_provisioning}")
 
+        # ------------------------------------------------------------------
+        # 4. Action Handler: ADD_SERVICES (Update after Provisioning)
+        # ------------------------------------------------------------------
         elif ACTION == ADD_SERVICES:
-            # 1. Parse the provisioned data from Terraform
             try:
-                new_provisioned_data = json.loads(SERVICES_JSON)
+                tf_data = json.loads(SERVICES_JSON)
             except json.JSONDecodeError:
                 print(f"ERROR: Invalid JSON data received: {SERVICES_JSON}")
                 sys.exit(1)
             
-            # 2. Update the nested structure: repos -> {repo} -> services -> {Type: Name}
+            # Normalize target key (Terraform keys are lowercase)
+            target_key = TARGET_REPO.lower() if TARGET_REPO else ""
+            updates = {}
+
+            # Map Terraform Output Keys -> Secret Manager Keys
+            # 1. Map S3
+            if "s3_buckets" in tf_data and target_key in tf_data["s3_buckets"]:
+                updates["S3"] = tf_data["s3_buckets"][target_key]
+            
+            # 2. Map ECR
+            if "ecr_repositories" in tf_data and target_key in tf_data["ecr_repositories"]:
+                updates["ECR"] = tf_data["ecr_repositories"][target_key]
+
+            if not updates:
+                print(f"WARNING: No resources found for repo '{TARGET_REPO}' in provisioned map.")
+            
+            # Update the nested structure
             repos = full_data.setdefault("repos", {})
             repo_node = repos.setdefault(TARGET_REPO, {})
             services_node = repo_node.setdefault("services", {})
             
-            # 3. Update with actual service names
-            # Expected new_provisioned_data: {"S3": "ashish-repo1-bucket", "ECR": "ashish-repo1-ecr"}
-            services_node.update(new_provisioned_data)
+            services_node.update(updates)
             
-            # 4. Save back to Secrets Manager
             client.put_secret_value(
                 SecretId=SECRET_NAME,
                 SecretString=json.dumps(full_data)
             )
-            print(f"SUCCESS: Updated {TARGET_REPO} in Secrets Manager with: {new_provisioned_data}")
+            print(f"SUCCESS: Updated {TARGET_REPO} in Secrets Manager with: {updates}")
 
     except Exception as e:
         print(f"FATAL ERROR: {str(e)}")
@@ -86,6 +132,6 @@ def handle_secret():
 
 if __name__ == '__main__':
     if not all([REGION, SECRET_NAME, ACTION]):
-        print("CRITICAL: Missing required environment variables.")
+        print("CRITICAL: Missing required environment variables (REGION, SECRET_FILE_NAME, ACTION_TYPE).")
         sys.exit(1)
     handle_secret()
