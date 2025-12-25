@@ -11,7 +11,6 @@ permissions:
 env:
   OWNER: "ashish-soni-org"
   CLIENT_REPO: "Terraform-Ansible"
-  # Semicolon-separated list of services
   SERVICES_REQUIRED: "ECR;S3" 
   ACTION_TYPE: "SERVICE_REQUEST"
 
@@ -72,8 +71,8 @@ jobs:
 
       - name: Dispatch Provisioning Event
         run: |
-          # 1. Parse SERVICES_REQUIRED (e.g., "ECR;S3") into a JSON Array for "standalone"
-          # structure: [{ "type": "ECR", "count": 1, "instances": [{"name": "repo-name"}] }, ...]
+          # 1. Parse SERVICES_REQUIRED (e.g., "ECR;S3") into a JSON Array of service objects
+          # Target structure per item: { "type": "ECR", "count": 1, "instances": [{"name": "repo-name"}] }
           
           IFS=';' read -ra SERVICES <<< "${{ env.SERVICES_REQUIRED }}"
           JSON_OBJECTS=()
@@ -86,21 +85,19 @@ jobs:
           done
           
           # Join array with commas
-          STANDALONE_ARRAY=$(IFS=, ; echo "${JSON_OBJECTS[*]}")
+          SERVICE_ARRAY=$(IFS=, ; echo "${JSON_OBJECTS[*]}")
 
-          # 2. Dispatch payload
+          # 2. Dispatch payload to File 2
           curl -X POST \
           -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ env.OWNER }}/${{ env.CLIENT_REPO }}/dispatches \
           -d @- <<EOF
           {
-            "event_type": "event-provision-infra",
+            "event_type": "event-on-demand-services",
             "client_payload": {
-              "manifest": {
-                "vpcs": [],
-                "standalone": [ $STANDALONE_ARRAY ]
-              }
+              "repo": "${{ github.event.repository.name }}",
+              "services": [ $SERVICE_ARRAY ]
             }
           }
           EOF
