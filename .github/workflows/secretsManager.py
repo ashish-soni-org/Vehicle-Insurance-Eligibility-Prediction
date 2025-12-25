@@ -9,11 +9,14 @@ REGION = os.getenv("AWS_REGION")
 ACTION = os.getenv("ACTION_TYPE")
 SECRET_NAME = os.getenv("SECRET_FILE_NAME")
 TARGET_REPO = os.getenv("REPO_NAME") 
-SERVICES_ENV = os.getenv("SERVICES", "")
+
+# This should be a JSON string like: {"S3": "my-bucket-name", "ECR": "my-repo-name"}
+SERVICES_JSON = os.getenv("PROVISIONED_MAP", "{}")
 
 # Constants
 CREATE_FILE_STRUCTURE = "CREATE_FILE_STRUCTURE"
 SERVICE_REQUEST = "SERVICE_REQUEST"
+ADD_SERVICES = "ADD_SERVICES"
 
 def get_client():
     """Initializes the Boto3 Secrets Manager client."""
@@ -21,59 +24,68 @@ def get_client():
 
 def handle_secret():
     client = get_client()
-    initial_payload = {"repos": {}}
-
+    
     try:
+        # Fetch current secret content for any operational action
+        try:
+            response = client.get_secret_value(SecretId=SECRET_NAME)
+            full_data = json.loads(response['SecretString'])
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException' and ACTION == CREATE_FILE_STRUCTURE:
+                full_data = {"repos": {}}
+            else:
+                raise e
+
         if ACTION == CREATE_FILE_STRUCTURE:
-            try:
-                client.create_secret(
-                    Name=SECRET_NAME,
-                    SecretString=json.dumps(initial_payload),
-                    Description="Contains all secrets related to EC2 instance Production Server"
-                )
-            except ClientError as e:
-                if e.response['Error']['Code'] == 'ResourceExistsException':
-                    client.put_secret_value(
-                        SecretId=SECRET_NAME,
-                        SecretString=json.dumps(initial_payload)
-                    )
-                else:
-                    raise e
+            full_data = {"repos": {}}
+            client.put_secret_value(SecretId=SECRET_NAME, SecretString=json.dumps(full_data))
+            print(f"Structure reset/created: {SECRET_NAME}")
 
         elif ACTION == SERVICE_REQUEST:
-            response = client.get_secret_value(SecretId=SECRET_NAME)
-            current_secrets = json.loads(response['SecretString'])
+            # Logic for checking service availability (as implemented previously)
+            requested_env = os.getenv("SERVICES", "")
+            requested_list = [s.strip() for s in requested_env.split(";") if s.strip()]
+            repo_services = full_data.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
             
-            requested_list = [s.strip() for s in SERVICES_ENV.split(";") if s.strip()]
+            result_map = {service: repo_services.get(service, "") for service in requested_list}
+            needs_provisioning = any(val == "" for val in result_map.values())
             
-            repo_services = current_secrets.get("repos", {}).get(TARGET_REPO, {}).get("services", {})
-            
-            result_map = {}
-            needs_provisioning = False
-            
-            for service in requested_list:
-                val = repo_services.get(service, "")
-                result_map[service] = val
-                # If any requested service is missing its value, flag for provisioning
-                if not val:
-                    needs_provisioning = True
-            
-            # Export to GitHub Output
             output_file = os.getenv('GITHUB_OUTPUT')
             if output_file:
                 with open(output_file, "a") as f:
                     f.write(f"required_services={json.dumps(result_map)}\n")
                     f.write(f"needs_provisioning={'true' if needs_provisioning else 'false'}\n")
+
+        elif ACTION == ADD_SERVICES:
+            # 1. Parse the provisioned data from Terraform
+            try:
+                new_provisioned_data = json.loads(SERVICES_JSON)
+            except json.JSONDecodeError:
+                print(f"ERROR: Invalid JSON data received: {SERVICES_JSON}")
+                sys.exit(1)
             
-            print(f"Processed {TARGET_REPO}. Provisioning Required: {needs_provisioning}")
+            # 2. Update the nested structure: repos -> {repo} -> services -> {Type: Name}
+            repos = full_data.setdefault("repos", {})
+            repo_node = repos.setdefault(TARGET_REPO, {})
+            services_node = repo_node.setdefault("services", {})
+            
+            # 3. Update with actual service names
+            # Expected new_provisioned_data: {"S3": "ashish-repo1-bucket", "ECR": "ashish-repo1-ecr"}
+            services_node.update(new_provisioned_data)
+            
+            # 4. Save back to Secrets Manager
+            client.put_secret_value(
+                SecretId=SECRET_NAME,
+                SecretString=json.dumps(full_data)
+            )
+            print(f"SUCCESS: Updated {TARGET_REPO} in Secrets Manager with: {new_provisioned_data}")
 
     except Exception as e:
-        print(f"Error managing secret: {str(e)}")
+        print(f"FATAL ERROR: {str(e)}")
         sys.exit(1)
 
 if __name__ == '__main__':
     if not all([REGION, SECRET_NAME, ACTION]):
-        print("Missing required environment variables")
+        print("CRITICAL: Missing required environment variables.")
         sys.exit(1)
-        
     handle_secret()

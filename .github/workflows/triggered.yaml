@@ -73,7 +73,7 @@ jobs:
           https://api.github.com/repos/${{ env.OWNER }}/${{ env.CLIENT_REPO }}/dispatches \
           -d @- <<EOF
           {
-            "event_type": "event-on-demand-service",
+            "event_type": "event-on-demand-services",
             "client_payload": {
               "repo": "${{ github.event.repository.name }}",
               "services": "${{ env.SERVICES_REQUIRED }}"
@@ -134,7 +134,7 @@ jobs:
             https://api.github.com/repos/${{ env.OWNER }}/${{ env.CLIENT_REPO }}/dispatches \
             -d @- <<EOF
             {
-              "event_type": "event-on-demand-deploy",
+              "event_type": "event-on-demand-deployment",
               "client_payload": {
                 "repo": "${{ github.event.repository.name }}",
                 "endpoint": "/${{ github.event.repository.name }}"
