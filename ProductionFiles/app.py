@@ -11,7 +11,7 @@ from src.constants import APP_HOST, APP_PORT
 from src.pipeline.prediction_pipeline import VehicleData, VehicleDataClassifier
 
 # Initialize FastAPI
-app = FastAPI()
+app = FastAPI(root_path="/Vehicle-Insurance-Eligibility-Prediction")
 
 # Mount static files and configure Jinja2 template engine
 app.mount("/static", StaticFiles(directory="static"), name="static")
