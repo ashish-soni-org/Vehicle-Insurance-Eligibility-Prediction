@@ -11,7 +11,6 @@ permissions:
 env:
   OWNER: "ashish-soni-org"
   CLIENT_REPO: "Terraform-Ansible"
-  # Semicolon-separated list of services
   SERVICES_REQUIRED: "ECR"
   ACTION_TYPE: "SERVICE_REQUEST"
 
