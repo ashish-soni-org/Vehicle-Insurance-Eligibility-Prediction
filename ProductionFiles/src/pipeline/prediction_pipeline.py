@@ -6,6 +6,7 @@ from typing import Dict, Union
 from src.exception import CustomException
 from src.entity.config_entity import VehiclePredictorConfig
 from src.entity.s3_estimator import CloudModelWrapper
+from src.logger import logging
 
 class VehicleData:
     """
