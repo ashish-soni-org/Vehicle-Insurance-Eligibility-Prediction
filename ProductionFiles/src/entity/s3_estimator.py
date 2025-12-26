@@ -10,79 +10,83 @@ class CloudModelWrapper:
     """
     Acts as an interface between the ML model stored in S3 and the local pipeline.
     
-    This class:
-        - Checks if the model exists in S3
-        - Loads the model from S3
-        - Uploads a new model to S3
-        - Performs predictions using the loaded model
+    This class handles the lifecycle of the model artifact in the cloud:
+        - Validating model existence in S3
+        - Loading the model into memory (using IAM Role credentials implicitly)
+        - Uploading new model artifacts
+        - Serving predictions via the cached model instance
 
-    It wraps S3 operations and ensures consistent model handling across training,
-    evaluation, and production inference workflows.
+    It ensures consistent model handling across training, evaluation, 
+    and production inference workflows.
     """
 
     def __init__(self, bucket_name: str, model_path: str):
         """
-        Initialize the estimator with S3 bucket details.
+        Initialize the wrapper with specific S3 bucket and model path details.
 
         Args:
-            bucket_name (str):
+            bucket_name (str): 
                 Name of the S3 bucket where the model is stored.
-            model_path (str):
-                Full S3 key (path) where the model is saved.
+            model_path (str): 
+                Full S3 key (path) where the model is saved (e.g., 'models/model.pkl').
 
         Attributes:
-            s3 (SimpleStorageService): S3 helper class for file operations.
-            loaded_model (MyModel or None): Cached model instance once loaded.
+            s3 (SimpleStorageService): 
+                Helper instance for S3 operations. Authentication is handled 
+                via the EC2 Instance Profile (IAM Role).
+            loaded_model (ModelWrapper | None): 
+                Cached model instance in memory.
         """
         self.bucket_name = bucket_name
         self.s3 = SimpleStorageService()
         self.model_path = model_path
         self.loaded_model: ModelWrapper = None
 
-    def is_model_present(self, model_path: str) -> bool:
+    def is_model_present(self, model_path: str = None) -> bool:
         """
-        Check whether a model file exists in the specified S3 bucket.
+        Check whether the model file exists in the specified S3 bucket.
 
         Args:
-            model_path (str):
-                S3 key of the model file.
+            model_path (str, optional): 
+                Specific S3 key to check. If None, uses the instance's configured model_path.
 
         Returns:
-            bool: True if model exists; False otherwise.
+            bool: True if the model object exists in S3; False otherwise.
         """
         try:
-            return self.s3.s3_key_path_available(self.bucket_name, model_path)
+            path_to_check = model_path if model_path else self.model_path
+            return self.s3.s3_key_path_available(bucket_name=self.bucket_name, key_path=path_to_check)
         except Exception as e:
             raise CustomException(e, sys) from e
 
     def save_model(self, from_file: str, remove: bool = False) -> None:
         """
-        Upload a trained model file to S3.
+        Upload a trained model file from the local filesystem to S3.
 
         Args:
-            from_file (str):
+            from_file (str): 
                 Local filesystem path of the model file to upload.
-            remove (bool, optional):
-                If True, delete the local file after uploading.
+            remove (bool, optional): 
+                If True, delete the local file after a successful upload. 
                 Defaults to False.
         """
         try:
-             self.s3.upload_file(
-                 from_file,
-                 self.model_path,
-                 self.bucket_name,
-                 remove
-             )
+            self.s3.upload_file(
+                from_filename=from_file,
+                to_filename=self.model_path,
+                bucket_name=self.bucket_name,
+                remove=remove
+            )
         except Exception as e:
             raise CustomException(e, sys) from e
 
     def load_model(self) -> ModelWrapper:
         """
-        Load the trained model from S3.
+        Download and deserialize the trained model from S3 into memory.
 
         Returns:
-            ModelWrapper: (NOT CloudModelWrapper !!)
-                The loaded ML model containing both the preprocessing pipeline
+            ModelWrapper: 
+                The loaded ML model object containing the preprocessing pipeline 
                 and the trained estimator.
         """
         try:
@@ -90,25 +94,27 @@ class CloudModelWrapper:
         except Exception as e:
             raise CustomException(e, sys) from e
 
-    def predict(self, dataframe: pd.DataFrame) -> np.array:
+    def predict(self, dataframe: pd.DataFrame) -> np.ndarray:
         """
         Perform inference using the loaded model.
 
         Steps:
-            1. Load model from S3 if not already loaded.
-            2. Apply preprocessing and prediction on the input DataFrame.
+            1. Checks if the model is currently cached in `self.loaded_model`.
+            2. If not, loads the model from S3.
+            3. Applies preprocessing and prediction on the input DataFrame.
 
         Args:
-            dataframe (DataFrame):
-                Input features in raw DataFrame format (before preprocessing).
+            dataframe (pd.DataFrame): 
+                Input features in raw DataFrame format.
 
         Returns:
-            numpy.ndarray:
-                Predictions generated by the trained model.
+            np.ndarray: 
+                Array of predictions generated by the model.
         """
         try:
             if self.loaded_model is None:
                 self.loaded_model = self.load_model()
+            
             return self.loaded_model.predict(dataframe=dataframe)
         except Exception as e:
-            raise CustomException(e, sys) from e
+            raise CustomException(e, sys) from e  
