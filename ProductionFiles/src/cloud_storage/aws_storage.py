@@ -66,12 +66,12 @@ class SimpleStorageService:
         """
         try:
             bucket = self.get_bucket(bucket_name)
-            file_objects = [file_objects for file_objects in bucket.objects.filter(Prefix = s3_key)]
+            file_objects = [obj for obj in bucket.objects.filter(Prefix=s3_key)]
             return len(file_objects) > 0
         except Exception as e:
             raise CustomException(e, sys) from e
 
-    def get_file_object(self, bucket_name: str, file_name: str) -> Union[List, object]: # Union[X, Y] means the value can be either type X or type Y
+    def get_file_object(self, bucket_name: str, file_name: str) -> Union[List, object]:
         """
         Retrieve one or multiple S3 file objects matching a prefix.
 
@@ -90,8 +90,6 @@ class SimpleStorageService:
             func = lambda x: x[0] if len(x) == 1 else x
             file_objs = func(file_objects)
             return file_objs
-        except Exception as e:
-            raise CustomException(e, sys) from e
         except Exception as e:
             raise CustomException(e, sys) from e
 

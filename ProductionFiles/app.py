@@ -10,17 +10,17 @@ import sys
 from src.constants import APP_HOST, APP_PORT
 from src.pipeline.prediction_pipeline import VehicleData, VehicleDataClassifier
 
-# Initialize FastAPI (No root_path, we handle it manually below)
+# Initialize FastAPI
 app = FastAPI()
 
 # -----------------------------------------------------------------------------
-# STATIC FILES CONFIGURATION (THE FIX)
+# STATIC FILES CONFIGURATION
 # -----------------------------------------------------------------------------
 # 1. Standard Mount: Handles requests where Nginx strips the prefix
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 2. Fallback Mount: Handles requests where Nginx sends the full path
-# This catches the request that was failing (404) in your browser
+# This ensures static assets load regardless of how the reverse proxy forwards the path
 app.mount("/Vehicle-Insurance-Eligibility-Prediction/static", StaticFiles(directory="static"), name="static_long")
 # -----------------------------------------------------------------------------
 
@@ -41,6 +41,10 @@ class DataForm:
     """
     Wrapper class to extract and store user-submitted vehicle form data 
     from a FastAPI Request object.
+    
+    CRITICAL UPDATE:
+    Performs type conversion from HTML Form Strings to Python Native Types (int/float)
+    to ensure the ML Model receives valid input.
     """
 
     def __init__(self, request: Request):
@@ -59,21 +63,23 @@ class DataForm:
 
     async def get_vehicle_data(self) -> None:
         form = await self.request.form()
-        self.Gender = form.get("Gender")
-        self.Age = form.get("Age")
-        self.Driving_License = form.get("Driving_License")
-        self.Region_Code = form.get("Region_Code")
-        self.Previously_Insured = form.get("Previously_Insured")
-        self.Annual_Premium = form.get("Annual_Premium")
-        self.Policy_Sales_Channel = form.get("Policy_Sales_Channel")
-        self.Vintage = form.get("Vintage")
-        self.Vehicle_Age_lt_1_Year = form.get("Vehicle_Age_lt_1_Year")
-        self.Vehicle_Age_gt_2_Years = form.get("Vehicle_Age_gt_2_Years")
-        self.Vehicle_Damage_Yes = form.get("Vehicle_Damage_Yes")
+        
+        # We must cast the string inputs from the HTML form to the correct numeric types
+        self.Gender = int(form.get("Gender"))
+        self.Age = int(form.get("Age"))
+        self.Driving_License = int(form.get("Driving_License"))
+        self.Region_Code = float(form.get("Region_Code"))
+        self.Previously_Insured = int(form.get("Previously_Insured"))
+        self.Annual_Premium = float(form.get("Annual_Premium"))
+        self.Policy_Sales_Channel = float(form.get("Policy_Sales_Channel"))
+        self.Vintage = int(form.get("Vintage"))
+        self.Vehicle_Age_lt_1_Year = int(form.get("Vehicle_Age_lt_1_Year"))
+        self.Vehicle_Age_gt_2_Years = int(form.get("Vehicle_Age_gt_2_Years"))
+        self.Vehicle_Damage_Yes = int(form.get("Vehicle_Damage_Yes"))
 
 
 # -----------------------------------------------------------------------------
-# ROUTE CONFIGURATION (Double Routes to catch everything)
+# ROUTE CONFIGURATION
 # -----------------------------------------------------------------------------
 
 @app.get("/Vehicle-Insurance-Eligibility-Prediction/", tags=["prediction"])
@@ -126,4 +132,4 @@ async def predictRouteClient(request: Request):
 
 if __name__ == "__main__":
     # Ensure host is 0.0.0.0 for Docker compatibility
-    app_run(app, host="0.0.0.0", port=5000)
+    app_run(app, host=APP_HOST, port=APP_PORT)
