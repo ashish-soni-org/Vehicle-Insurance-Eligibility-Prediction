@@ -10,18 +10,18 @@ import sys
 from src.constants import APP_HOST, APP_PORT
 from src.pipeline.prediction_pipeline import VehicleData, VehicleDataClassifier
 
-# Initialize FastAPI with the root_path to match Nginx
-app = FastAPI(root_path="/Vehicle-Insurance-Eligibility-Prediction")
+# Initialize FastAPI (No root_path, we handle it manually below)
+app = FastAPI()
 
 # -----------------------------------------------------------------------------
 # STATIC FILES CONFIGURATION (THE FIX)
 # -----------------------------------------------------------------------------
-# 1. Standard Mount: Handles requests where Nginx strips the prefix (e.g., /static/style.css)
+# 1. Standard Mount: Handles requests where Nginx strips the prefix
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 2. Fallback Mount: Handles requests where Nginx passes the full path (e.g., /Vehicle.../static/style.css)
-# This acts as a safety net ensuring CSS loads in all proxy scenarios.
-app.mount("/Vehicle-Insurance-Eligibility-Prediction/static", StaticFiles(directory="static"), name="static_fallback")
+# 2. Fallback Mount: Handles requests where Nginx sends the full path
+# This catches the request that was failing (404) in your browser
+app.mount("/Vehicle-Insurance-Eligibility-Prediction/static", StaticFiles(directory="static"), name="static_long")
 # -----------------------------------------------------------------------------
 
 templates = Jinja2Templates(directory='templates')
@@ -29,7 +29,6 @@ templates = Jinja2Templates(directory='templates')
 # Allow all origins for CORS
 origins = ["*"]
 
-# Configure middleware to handle CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -73,13 +72,25 @@ class DataForm:
         self.Vehicle_Damage_Yes = form.get("Vehicle_Damage_Yes")
 
 
-@app.get("/", tags=["prediction"])
+# -----------------------------------------------------------------------------
+# ROUTE CONFIGURATION (Double Routes to catch everything)
+# -----------------------------------------------------------------------------
+
+@app.get("/Vehicle-Insurance-Eligibility-Prediction/", tags=["prediction"])
+@app.get("/", tags=["root_fallback"])
 async def index(request: Request):
+    """
+    Render the main HTML form page.
+    """
     return templates.TemplateResponse("index.html", {"request": request, "context": "Ready for Prediction"})
 
     
+@app.post("/Vehicle-Insurance-Eligibility-Prediction/")
 @app.post("/")
 async def predictRouteClient(request: Request):
+    """
+    Handle form submission and generate prediction.
+    """
     try:
         form = DataForm(request)
         await form.get_vehicle_data()
