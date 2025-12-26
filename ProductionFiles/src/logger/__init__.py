@@ -1,7 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-from from_root import from_root
 from datetime import datetime
 
 LOG_DIR_NAME = "logs"
@@ -9,7 +8,9 @@ LOG_FILE_NAME = f"{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.log" # string f
 MAX_Log_FILE_SIZE = 5 * 1024 * 1024
 BACKUP_FILE_COUNT = 3 
 
-log_dir_path = os.path.join(from_root(), LOG_DIR_NAME)
+# CRITICAL FIX: 'from_root' often fails in Docker. 
+# We use os.getcwd() which reliably points to /app in the container.
+log_dir_path = os.path.join(os.getcwd(), LOG_DIR_NAME)
 os.makedirs(log_dir_path, exist_ok= True)
 log_file_path = os.path.join(log_dir_path, LOG_FILE_NAME)
 
@@ -40,7 +41,9 @@ def configure_logger():
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.DEBUG)
 
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+    # Prevent adding duplicate handlers if function is called multiple times
+    if not logger.hasHandlers():
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
 
 configure_logger()
