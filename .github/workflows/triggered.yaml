@@ -52,6 +52,12 @@ jobs:
           ACTION_TYPE: ${{ env.ACTION_TYPE }}
           REPO_NAME: ${{ github.event.repository.name }}
           SERVICES: ${{ env.SERVICES_REQUIRED }}
+      
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf .[^.]*
 
   request_service:
     name: Request for Required Service
@@ -101,6 +107,12 @@ jobs:
             }
           }
           EOF
+      
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf .[^.]*
 
   on_demand_build:
     name: Build and Push Image
@@ -137,6 +149,12 @@ jobs:
           ECR_REGISTRY: ${{ steps.login_ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ fromJson(needs.get_required_services.outputs.services)['ECR'] }}
           IMAGE_TAG: latest
+      
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf .[^.]*
 
   deploy_project:
     name: Trigger Deployment
@@ -167,3 +185,9 @@ jobs:
               }
             }
             EOF
+      
+      - name: Cleanup Workspace
+        if: always()
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf .[^.]*
