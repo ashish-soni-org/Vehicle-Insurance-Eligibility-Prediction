@@ -10,11 +10,20 @@ import sys
 from src.constants import APP_HOST, APP_PORT
 from src.pipeline.prediction_pipeline import VehicleData, VehicleDataClassifier
 
-# Initialize FastAPI
+# Initialize FastAPI with the root_path to match Nginx
 app = FastAPI(root_path="/Vehicle-Insurance-Eligibility-Prediction")
 
-# Mount static files and configure Jinja2 template engine
+# -----------------------------------------------------------------------------
+# STATIC FILES CONFIGURATION (THE FIX)
+# -----------------------------------------------------------------------------
+# 1. Standard Mount: Handles requests where Nginx strips the prefix (e.g., /static/style.css)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 2. Fallback Mount: Handles requests where Nginx passes the full path (e.g., /Vehicle.../static/style.css)
+# This acts as a safety net ensuring CSS loads in all proxy scenarios.
+app.mount("/Vehicle-Insurance-Eligibility-Prediction/static", StaticFiles(directory="static"), name="static_fallback")
+# -----------------------------------------------------------------------------
+
 templates = Jinja2Templates(directory='templates')
 
 # Allow all origins for CORS
@@ -36,14 +45,6 @@ class DataForm:
     """
 
     def __init__(self, request: Request):
-        """
-        Initialize the DataForm with an incoming FastAPI Request.
-        
-        Parameters
-        ----------
-        request : Request
-            The HTTP request that contains the submitted form data.
-        """
         self.request: Request = request
         self.Gender: int = None
         self.Age: int = None
@@ -58,12 +59,6 @@ class DataForm:
         self.Vehicle_Damage_Yes: int = None
 
     async def get_vehicle_data(self) -> None:
-        """
-        Parse vehicle insurance details submitted via HTML form.
-
-        Extracts values from the FastAPI request body and assigns them 
-        to the corresponding instance attributes.
-        """
         form = await self.request.form()
         self.Gender = form.get("Gender")
         self.Age = form.get("Age")
@@ -80,43 +75,11 @@ class DataForm:
 
 @app.get("/", tags=["prediction"])
 async def index(request: Request):
-    """
-    Render the main HTML form page.
-
-    Parameters
-    ----------
-    request : Request
-        FastAPI request object used for template rendering.
-
-    Returns
-    -------
-    TemplateResponse
-        Renders index.html with a default context message.
-    """
     return templates.TemplateResponse("index.html", {"request": request, "context": "Ready for Prediction"})
 
     
 @app.post("/")
 async def predictRouteClient(request: Request):
-    """
-    Handle form submission and generate prediction using trained model.
-
-    Workflow:
-    1. Extract form data using DataForm.
-    2. Convert values to DataFrame via VehicleData.
-    3. Run prediction using VehicleDataClassifier.
-    4. Interpret and render result back into the template.
-
-    Parameters
-    ----------
-    request : Request
-        FastAPI request containing user form data.
-
-    Returns
-    -------
-    TemplateResponse or dict
-        Renders page with prediction, or returns an error dict.
-    """
     try:
         form = DataForm(request)
         await form.get_vehicle_data()
@@ -150,6 +113,6 @@ async def predictRouteClient(request: Request):
         return {"status": False, "error": f"{CustomException(e, sys)}"}
     
 
-# Entry point for the application
 if __name__ == "__main__":
-    app_run(app, host=APP_HOST, port=APP_PORT)
+    # Ensure host is 0.0.0.0 for Docker compatibility
+    app_run(app, host="0.0.0.0", port=5000)
