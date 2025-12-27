@@ -1,7 +1,7 @@
 import os
 import boto3
 
-from src.constants import REGION_NAME, AWS_ACCESS_KEY_ID_ENV_KEY, AWS_SECRET_ACCESS_KEY_ENV_KEY
+from src.constants import REGION_NAME
 
 class S3Client:
     """
@@ -11,13 +11,10 @@ class S3Client:
         - boto3 S3 *client* (used for low-level operations like upload/download)
         - boto3 S3 *resource* (used for high-level, object-oriented S3 operations)
 
-    It reads AWS credentials from environment variables and ensures that S3
-    connections are created only once during the application's lifecycle,
-    improving performance and avoiding redundant boto3 initializations.
-
-    Environment Variables Required:
-        - AWS_ACCESS_KEY_ID
-        - AWS_SECRET_ACCESS_KEY
+    AUTHENTICATION:
+    It relies on the standard boto3 credential chain. When running on an EC2 instance
+    with an assigned IAM Role, boto3 will automatically detect and use the instance 
+    profile credentials. No environment variables or hardcoded keys are required.
 
     Attributes:
         s3_client (boto3.client): Shared low-level S3 client instance.
@@ -37,27 +34,21 @@ class S3Client:
         Notes:
             - Implements a *singleton pattern* at the class level.
             - Ensures only one S3 client and S3 resource are created for the entire application.
-            - Credentials are pulled from environment variables for security and flexibility.
+            - RELIES ON IAM ROLE: Does not require explicit access keys.
         """
-        if S3Client.s3_resource == None or S3Client.s3_client == None:
-            __access_key_id = os.getenv(AWS_ACCESS_KEY_ID_ENV_KEY)
-            __secret_access_key = os.getenv(AWS_SECRET_ACCESS_KEY_ENV_KEY)
-
-            if __access_key_id == None:
-                raise Exception(f"Environment variable {AWS_ACCESS_KEY_ID_ENV_KEY} is not set.")
+        if S3Client.s3_resource is None or S3Client.s3_client is None:
             
-            if __secret_access_key == None:
-                raise Exception(f"Environment variable {AWS_SECRET_ACCESS_KEY_ENV_KEY} is not set.")
+            # Initialize without passing explicit credentials.
+            # Boto3 will automatically find the IAM Role credentials from the EC2 metadata.
+            S3Client.s3_resource = boto3.resource(
+                's3',
+                region_name=region_name
+            )
             
-            S3Client.s3_resource = boto3.resource('s3',
-                                            aws_access_key_id=__access_key_id,
-                                            aws_secret_access_key=__secret_access_key,
-                                            region_name=region_name
-                                            )
-            S3Client.s3_client = boto3.client('s3',
-                                        aws_access_key_id=__access_key_id,
-                                        aws_secret_access_key=__secret_access_key,
-                                        region_name=region_name
-                                        )
+            S3Client.s3_client = boto3.client(
+                's3',
+                region_name=region_name
+            )
+            
         self.s3_resource = S3Client.s3_resource
         self.s3_client = S3Client.s3_client

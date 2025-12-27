@@ -131,5 +131,4 @@ async def predictRouteClient(request: Request):
     
 
 if __name__ == "__main__":
-    # Ensure host is 0.0.0.0 for Docker compatibility
     app_run(app, host=APP_HOST, port=APP_PORT)
