@@ -1,27 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark"> 
+    <meta name="color-scheme" content="light dark">
     <title>Vehicle Insurance Prediction</title>
     <link rel="stylesheet" href="/static/style.css">
-    
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234F46E5' d='M32 2C18 2 6 12 6 26v16c0 14 10 20 26 20s26-6 26-20V26C58 12 46 2 32 2z'/%3E%3Cpath fill='%23ffffff' d='M44 34l-3-9h-9l-2 3h-4l-2-3h-9l-3 9H10v4h4v6h4v-6h28v6h4v-6h4v-4h-2zM19 28h26l1.5 4H17.5L19 28z'/%3E%3C/svg%3E" type="image/svg+xml">
-    
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234F46E5' d='M32 2C18 2 6 12 6 26v16c0 14 10 20 26 20s26-6 26-20V26C58 12 46 2 32 2z'/%3E%3Cpath fill='%23ffffff' d='M44 34l-3-9h-9l-2 3h-4l-2-3h-9l-3 9H10v4h4v6h4v-6h28v6h4v-6h4v-4h-2zM19 28h26l1.5 4H17.5L19 28z'/%3E%3C/svg%3E"
+        type="image/svg+xml">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        'apple-bg': '#ffffff',
+                        'apple-text': '#1d1d1f',
+                        'apple-accent': '#0071e3',
+                        'apple-glass': 'rgba(255, 255, 255, 0.7)',
+                        'apple-dark-bg': '#000000',
+                        'apple-dark-text': '#f5f5f7',
+                        'apple-dark-accent': '#2997ff',
+                        'apple-dark-glass': 'rgba(28, 28, 30, 0.7)',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+
+<body class="pt-16">
+    <nav
+        class="fixed top-0 left-0 w-full z-50 bg-[rgba(255,255,255,0.7)] dark:bg-[rgba(28,28,30,0.7)] backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-black/10 dark:border-white/10 transition-colors duration-500">
+        <div class="max-w-[1200px] mx-auto px-6">
+            <div class="flex items-center justify-between h-[60px]">
+                <div class="flex-shrink-0">
+                    <a href="https://ashishsoni.in/"
+                        class="text-apple-text dark:text-apple-dark-text font-bold text-[18px] hover:opacity-70 transition-opacity no-underline">
+                        Ashish Soni
+                    </a>
+                </div>
+                <div>
+                    <a href="https://github.com/ashish-soni-org/Vehicle-Insurance-Eligibility-Prediction"
+                        target="_blank" rel="noopener noreferrer"
+                        class="flex items-center gap-2 text-apple-accent hover:text-apple-text dark:hover:text-white text-[14px] font-medium transition-colors no-underline">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                            <path fill-rule="evenodd"
+                                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="main-wrapper">
         <div class="container">
             <header class="header-section">
-                
+
                 <div class="hero-icon-container">
-                    <svg class="hero-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
+                    <svg class="hero-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <path d="m9 12 2 2 4-4" />
                     </svg>
                 </div>
 
@@ -31,15 +85,31 @@
             <form method="post" action="/Vehicle-Insurance-Eligibility-Prediction/">
                 <div class="toolbar">
                     <button type="button" class="secondary-button" onclick="fetchRandomData()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 8h.01"></path><path d="M8 8h.01"></path><path d="M8 16h.01"></path><path d="M16 16h.01"></path><path d="M12 12h.01"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 8h.01"></path>
+                            <path d="M8 8h.01"></path>
+                            <path d="M8 16h.01"></path>
+                            <path d="M16 16h.01"></path>
+                            <path d="M12 12h.01"></path>
+                        </svg>
                         Auto-Fill Random Data from Dataset
                     </button>
-                    <span id="loading-text" style="display:none; font-size: 0.85rem; color: var(--primary);">Fetching data...</span>
+                    <span id="loading-text" style="display:none; font-size: 0.85rem; color: var(--primary);">Fetching
+                        data...</span>
                 </div>
 
                 <div id="reference-box" class="reference-card" style="display: none;">
                     <div class="reference-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
                     </div>
                     <div class="reference-content">
                         <h3>Dataset Reference</h3>
@@ -48,7 +118,7 @@
                 </div>
 
                 <div class="form-grid">
-                    
+
                     <div class="form-group">
                         <label for="Gender">Gender</label>
                         <select id="Gender" name="Gender" required>
@@ -62,7 +132,12 @@
                         <label for="Age">
                             Age (Years)
                             <div class="tooltip-container">
-                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
                                 <span class="tooltip-text">Range: 20 - 85 years</span>
                             </div>
                         </label>
@@ -81,11 +156,17 @@
                         <label for="Region_Code">
                             Region Code
                             <div class="tooltip-container">
-                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
                                 <span class="tooltip-text">Unique code: 0 - 52</span>
                             </div>
                         </label>
-                        <input type="number" step="1" id="Region_Code" name="Region_Code" placeholder="e.g. 28" min="0" max="52" required>
+                        <input type="number" step="1" id="Region_Code" name="Region_Code" placeholder="e.g. 28" min="0"
+                            max="52" required>
                     </div>
 
                     <div class="form-group">
@@ -100,33 +181,51 @@
                         <label for="Annual_Premium">
                             Annual Premium
                             <div class="tooltip-container">
-                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
                                 <span class="tooltip-text">Range: 2,630 - 540,165</span>
                             </div>
                         </label>
-                        <input type="number" step="0.01" id="Annual_Premium" name="Annual_Premium" placeholder="e.g. 40000" min="2630" max="540165" required>
+                        <input type="number" step="0.01" id="Annual_Premium" name="Annual_Premium"
+                            placeholder="e.g. 40000" min="2630" max="540165" required>
                     </div>
 
                     <div class="form-group">
                         <label for="Policy_Sales_Channel">
                             Sales Channel
                             <div class="tooltip-container">
-                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
                                 <span class="tooltip-text">Channel ID: 1 - 163</span>
                             </div>
                         </label>
-                        <input type="number" step="1" id="Policy_Sales_Channel" name="Policy_Sales_Channel" placeholder="e.g. 26" min="1" max="163" required>
+                        <input type="number" step="1" id="Policy_Sales_Channel" name="Policy_Sales_Channel"
+                            placeholder="e.g. 26" min="1" max="163" required>
                     </div>
 
                     <div class="form-group">
                         <label for="Vintage">
                             Vintage (Days)
                             <div class="tooltip-container">
-                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
                                 <span class="tooltip-text">Tenure: 10 - 299 days</span>
                             </div>
                         </label>
-                        <input type="number" id="Vintage" name="Vintage" placeholder="Days as customer" min="10" max="299" required>
+                        <input type="number" id="Vintage" name="Vintage" placeholder="Days as customer" min="10"
+                            max="299" required>
                     </div>
 
                     <div class="form-group">
@@ -157,25 +256,37 @@
             </form>
 
             {% if context and context != "Ready for Prediction" %}
-                <div class="result-container {{ 'result-success' if context == 'Eligible' else 'result-danger' }}">
-                    <div class="result-icon">
-                        {% if context == 'Eligible' %}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        {% else %}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        {% endif %}
-                    </div>
-                    <div class="result-text">
-                        <h2>Prediction Result</h2>
-                        <p>{{ context }}</p>
-                    </div>
+            <div class="result-container {{ 'result-success' if context == 'Eligible' else 'result-danger' }}">
+                <div class="result-icon">
+                    {% if context == 'Eligible' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    {% endif %}
                 </div>
+                <div class="result-text">
+                    <h2>Prediction Result</h2>
+                    <p>{{ context }}</p>
+                </div>
+            </div>
             {% endif %}
 
             <div class="footer-link">
-                <a href="https://github.com/ashish-soni-org/Vehicle-Insurance-Eligibility-Prediction" target="_blank" rel="noopener noreferrer">
-                    <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                <a href="https://github.com/ashish-soni-org/Vehicle-Insurance-Eligibility-Prediction" target="_blank"
+                    rel="noopener noreferrer">
+                    <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
                     </svg>
                     View Project on GitHub
                 </a>
@@ -202,22 +313,22 @@
 
         async function fetchRandomData() {
             const csvUrl = 'https://raw.githubusercontent.com/ashish-soni-org/Vehicle-Insurance-Eligibility-Prediction/main/notebook/data.csv';
-            
+
             const loadingText = document.getElementById('loading-text');
             const referenceBox = document.getElementById('reference-box');
             const targetValueDisplay = document.getElementById('actual-target-value');
-            
+
             loadingText.style.display = 'inline';
-            referenceBox.style.display = 'none'; 
+            referenceBox.style.display = 'none';
 
             try {
                 const response = await fetch(csvUrl);
                 if (!response.ok) throw new Error("Failed to fetch CSV");
-                
+
                 const text = await response.text();
                 const rows = text.trim().split('\n');
                 const headers = rows[0].split(',');
-                
+
                 const randomIndex = Math.floor(Math.random() * (rows.length - 1)) + 1;
                 const randomRow = rows[randomIndex].split(',');
 
@@ -250,7 +361,7 @@
 
                 // Show Reference Target
                 const actualResponse = dataMap['Response'];
-                
+
                 let readableResponse = "Unknown";
                 if (actualResponse === '1') {
                     readableResponse = "Eligible (1)";
@@ -261,7 +372,7 @@
                 }
 
                 targetValueDisplay.textContent = readableResponse;
-                referenceBox.style.display = 'flex'; 
+                referenceBox.style.display = 'flex';
 
             } catch (error) {
                 console.error(error);
@@ -272,4 +383,5 @@
         }
     </script>
 </body>
+
 </html>
