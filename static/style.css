@@ -5,19 +5,19 @@
     --primary: #4F46E5;
     --primary-hover: #4338ca;
     --background: #F3F4F6;
-    --card-bg: rgba(255, 255, 255, 0.85); 
+    --card-bg: rgba(255, 255, 255, 0.85);
     --input-bg: #ffffff;
     --text-main: #1F2937;
     --text-muted: #6B7280;
     --border: #E5E7EB;
     --radius: 16px;
     --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    
+
     --success-bg: #ECFDF5;
     --success-border: #10B981;
     --success-text-head: #065F46;
     --success-text-body: #047857;
-    
+
     --danger-bg: #FEF2F2;
     --danger-border: #EF4444;
     --danger-text-head: #991B1B;
@@ -29,13 +29,13 @@
     --info-text: #1E40AF;
 
     /* Only needed for the favicon now */
-    --svg-fill-dark: #111827; 
+    --svg-fill-dark: #111827;
 }
 
 /* --- 2. Dark Mode Overrides --- */
 @media (prefers-color-scheme: dark) {
     :root {
-        --primary: #6366F1; 
+        --primary: #6366F1;
         --primary-hover: #818CF8;
         --background: #0f172a;
         --card-bg: rgba(30, 41, 59, 0.7);
@@ -43,12 +43,12 @@
         --text-main: #F3F4F6;
         --text-muted: #9CA3AF;
         --border: #374151;
-        
+
         --success-bg: rgba(6, 95, 70, 0.3);
         --success-border: #059669;
         --success-text-head: #D1FAE5;
         --success-text-body: #6EE7B7;
-        
+
         --danger-bg: rgba(153, 27, 27, 0.3);
         --danger-border: #DC2626;
         --danger-text-head: #FEE2E2;
@@ -73,7 +73,7 @@
 
 body {
     background-color: var(--background);
-    background-image: 
+    background-image:
         radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
@@ -82,6 +82,8 @@ body {
     justify-content: center;
     align-items: center;
     padding: 1.5rem;
+    padding-top: 80px;
+    /* Added for fixed navbar */
     color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -138,13 +140,21 @@ body {
 .hero-icon {
     width: 42px;
     height: 42px;
-    color: white; /* Icon is always white against the colored blob */
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    color: white;
+    /* Icon is always white against the colored blob */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
 @keyframes blobPulse {
-    0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; transform: scale(1); }
-    100% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; transform: scale(1.05); }
+    0% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+        transform: scale(1);
+    }
+
+    100% {
+        border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+        transform: scale(1.05);
+    }
 }
 
 .header-section h1 {
@@ -292,7 +302,7 @@ label {
     transition: opacity 0.3s;
     font-size: 0.75rem;
     font-weight: 500;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     pointer-events: none;
 }
 
@@ -313,7 +323,8 @@ label {
 }
 
 /* --- 7. Inputs --- */
-input, select {
+input,
+select {
     width: 100%;
     padding: 0.75rem 1rem;
     background-color: var(--input-bg);
@@ -333,7 +344,8 @@ select {
     padding-right: 2.5rem;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
@@ -383,23 +395,39 @@ input::placeholder {
     background-color: var(--success-bg);
     border: 1px solid var(--success-border);
 }
+
 .result-success .result-icon {
     background-color: var(--success-border);
     color: white;
 }
-.result-success h2 { color: var(--success-text-head); }
-.result-success p { color: var(--success-text-body); font-weight: 500; }
+
+.result-success h2 {
+    color: var(--success-text-head);
+}
+
+.result-success p {
+    color: var(--success-text-body);
+    font-weight: 500;
+}
 
 .result-danger {
     background-color: var(--danger-bg);
     border: 1px solid var(--danger-border);
 }
+
 .result-danger .result-icon {
     background-color: var(--danger-border);
     color: white;
 }
-.result-danger h2 { color: var(--danger-text-head); }
-.result-danger p { color: var(--danger-text-body); font-weight: 500; }
+
+.result-danger h2 {
+    color: var(--danger-text-head);
+}
+
+.result-danger p {
+    color: var(--danger-text-body);
+    font-weight: 500;
+}
 
 .result-icon {
     width: 44px;
@@ -444,11 +472,25 @@ input::placeholder {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
