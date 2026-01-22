@@ -67,7 +67,7 @@ MIN_SAMPLES_SPLIT_RANDOM_STATE: int = 42
 MODEL Evaluation related constants
 """
 MODEL_EVALUATION_CHANGED_THRESHOLD_SCORE: float = 0.02
-MODEL_BUCKET_NAME = "project-vehicle-insurance-eligibility-prediction-bucket"
+MODEL_BUCKET_NAME = "vehicle-insurance-eligibility-prediction-1224b07c"
 MODEL_PUSHER_S3_KEY = "model-registry"
 
 

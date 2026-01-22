@@ -1,5 +1,5 @@
 MODEL_FILE_NAME = "model.pkl"
-MODEL_BUCKET_NAME = "project-vehicle-insurance-eligibility-prediction-bucket"
+MODEL_BUCKET_NAME = "vehicle-insurance-eligibility-prediction-1224b07c"
 
 REGION_NAME = "ap-south-1"
 
