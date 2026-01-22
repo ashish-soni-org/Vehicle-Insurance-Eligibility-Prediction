@@ -7,11 +7,86 @@
     <title>Vehicle Insurance Prediction</title>
     <link rel="stylesheet" href="/Vehicle-Insurance-Eligibility-Prediction/static/style.css">
     
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234F46E5' d='M32 2C18 2 6 12 6 26v16c0 14 10 20 26 20s26-6 26-20V26C58 12 46 2 32 2z'/%3E%3Cpath fill='%23ffffff' d='M44 34l-3-9h-9l-2 3h-4l-2-3h-9l-3 9H10v4h4v6h4v-6h28v6h4v-6h4v-4h-2zM19 28h26l1.5 4H17.5L19 28z'/%3E%3C/svg%3E" type="image/svg+xml">
+    <!-- <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%234F46E5' d='M32 2C18 2 6 12 6 26v16c0 14 10 20 26 20s26-6 26-20V26C58 12 46 2 32 2z'/%3E%3Cpath fill='%23ffffff' d='M44 34l-3-9h-9l-2 3h-4l-2-3h-9l-3 9H10v4h4v6h4v-6h28v6h4v-6h4v-4h-2zM19 28h26l1.5 4H17.5L19 28z'/%3E%3C/svg%3E" type="image/svg+xml"> -->
     
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233B82F6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'/%3E%3Cline x1='7' y1='2' x2='7' y2='22'/%3E%3Cline x1='17' y1='2' x2='17' y2='22'/%3E%3Cline x1='2' y1='12' x2='22' y2='12'/%3E%3Cline x1='2' y1='7' x2='7' y2='7'/%3E%3Cline x1='17' y1='17' x2='22' y2='17'/%3E%3Cline x1='17' y1='7' x2='22' y2='7'/%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        // Light Mode
+                        'apple-bg': '#ffffff',
+                        'apple-text': '#1d1d1f',
+                        'apple-accent': '#0071e3',
+                        'apple-glass': 'rgba(255, 255, 255, 0.7)',
+
+                        // Dark Mode
+                        'apple-dark-bg': '#000000',
+                        'apple-dark-text': '#f5f5f7',
+                        'apple-dark-accent': '#2997ff',
+                        'apple-dark-glass': 'rgba(28, 28, 30, 0.7)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'pop-in': 'popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'scroll-background': 'scrollBackground 60s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        scrollBackground: {
+                            '0%': { transform: 'translate3d(0, 0, 0)' },
+                            '100%': { transform: 'translate3d(-50%, 0, 0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .glass-card {
+                background: rgba(28, 28, 30, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        .gpu-accelerated {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+            will-change: transform, opacity;
+        }
+    </style>
 </head>
 <body>
     <nav
