@@ -148,10 +148,18 @@ class VehicleDataClassifier:
         """
         try:
             logging.info("Predicting the results for the provided inputs...")
+
+            # In actual it's model is meant to be loaded from S3 but for simplicity we are loading it from the model folder
+            # however s3's model is working as well (just need to provide s3 and aws creds)
             model = CloudModelWrapper(
                 bucket_name=self.prediction_pipeline_config.model_bucket_name,
-                model_path=self.prediction_pipeline_config.model_file_path,
+                model_path="/home/ashish-ubuntu/Desktop/ProductionCode/Vehicle-Insurance-Eligibility-Prediction/ProductionFiles/model/model.pkl",
             )
+            
+            # model = CloudModelWrapper(
+            #     bucket_name=self.prediction_pipeline_config.model_bucket_name,
+            #     model_path=self.prediction_pipeline_config.model_file_path,
+            # )
             result =  model.predict(dataframe)
 
             logging.info(f"prediction completed. Prediction: {result}")
